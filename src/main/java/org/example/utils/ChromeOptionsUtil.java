@@ -1,4 +1,4 @@
-package org.example;
+package org.example.utils;
 
 import org.openqa.selenium.chrome.ChromeOptions;
 import java.util.HashMap;

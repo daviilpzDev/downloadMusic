@@ -4,7 +4,7 @@ import org.openqa.selenium.By;
 
 public class Locators {
     public static final By SEARCH_INPUT = By.xpath("//input[@name='search_query']");
-    public static final By FIRST_RESULT = By.xpath("(//a[@id='video-title'])[1]");
+    public static final By FIRST_RESULT = By.xpath("(//a[@id='video-title']/ancestor::div/following-sibling::div[@id='channel-info'])[1]");
     public static final By EMAIL_INPUT = By.xpath("//input[@id='usernameInput']");
     public static final By PASSWORD_INPUT = By.xpath("//input[@id='passwordInput']");
     public static final By LOGIN_BUTTON = By.xpath("//input[@id='loginButton']");

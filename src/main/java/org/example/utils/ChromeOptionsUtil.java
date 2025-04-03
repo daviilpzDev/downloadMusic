@@ -16,8 +16,9 @@ public class ChromeOptionsUtil {
         options.setExperimentalOption("prefs", prefs);
         options.addArguments("--no-sandbox");
         options.addArguments("--maximized");
-        options.addArguments("--headless");
+//        options.addArguments("--headless");
         options.addArguments("--incognito");
+        options.addArguments("--mute-audio");
         return options;
     }
 }

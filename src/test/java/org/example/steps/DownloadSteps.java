@@ -1,7 +1,6 @@
 package org.example.steps;
 
 import io.cucumber.java.en.*;
-import org.example.utils.FileDownloadCompletedCondition;
 import org.example.Methods;
 
 

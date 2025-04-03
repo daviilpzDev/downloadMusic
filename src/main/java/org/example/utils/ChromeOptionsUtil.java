@@ -15,7 +15,7 @@ public class ChromeOptionsUtil {
         ChromeOptions options = new ChromeOptions();
         options.setExperimentalOption("prefs", prefs);
         options.addArguments("--no-sandbox");
-        options.addArguments("--maximized");
+        options.addArguments("--start-maximized");
 //        options.addArguments("--headless");
         options.addArguments("--incognito");
         options.addArguments("--mute-audio");

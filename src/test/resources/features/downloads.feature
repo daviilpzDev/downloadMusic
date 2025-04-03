@@ -6,9 +6,6 @@ Feature: Convert and download YouTube video to MP3
 
     Scenario: Download music successfully
         Given search song and get the url
-        * I navigate to "http://my.jdownloader.org" page
-        When login to jdownloader
-        * I enter the video URL into the input field
-        Then deletes not needed files
+        Then I enter the video URL into the input field
 
 

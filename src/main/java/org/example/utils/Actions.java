@@ -1,8 +1,6 @@
 package org.example.utils;
 
 import org.openqa.selenium.By;
-
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.yaml.snakeyaml.Yaml;
@@ -14,10 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class Actions {
-    public static void clickAndSendText(WebDriverWait wait, By locator, String text) {
-        clickElement(wait, locator);
-        writeText(wait, locator, text);
-    }
 
     public static void clickElement(WebDriverWait wait, By locator) {
         wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
@@ -49,11 +43,4 @@ public class Actions {
         }
     }
 
-    public static void waitForPageLoad (WebDriverWait wait) {
-        wait.until((driver) -> {
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            String readyState = js.executeScript("return document.readyState").toString();
-            return readyState.equals("complete");
-        });
-    }
 }

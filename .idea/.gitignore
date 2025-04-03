@@ -1,3 +1,5 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+src/test/resources/data/loginJd.yml
+.env

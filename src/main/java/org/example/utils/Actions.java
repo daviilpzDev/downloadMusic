@@ -13,15 +13,6 @@ import java.util.Map;
 
 public class Actions {
 
-    public static void clickElement(WebDriverWait wait, By locator) {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
-        wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
-    }
-
-    public static void writeText(WebDriverWait wait, By locator, String text) {
-        wait.until(ExpectedConditions.elementToBeClickable(locator)).sendKeys(text);
-    }
-
     public static List<String> getYmlFile(String fileName) {
         Yaml yaml = new Yaml();
         String filePath = System.getProperty("user.dir") + "/src/test/resources/data/" + fileName + ".yml";

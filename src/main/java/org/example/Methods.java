@@ -4,11 +4,6 @@ import org.example.hooks.Hooks;
 import org.example.utils.Actions;
 import org.example.utils.Constants;
 import org.example.utils.Globals;
-import org.example.utils.Helper;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -22,36 +17,35 @@ public class Methods {
 
     private static final Logger logger = Constants.logger;
 
-    public static void searchSongAndGetTheUrl(WebDriver driver) {
+    public static void searchSongAndGetTheUrl() {
         List<String> songs = Actions.getYmlFile("songs");
 
         List<String> urls = Globals.list;
-        driver.get("https://www.youtube.com/");
-
-        Actions.clickElement(Constants.WAIT_SLOW, Locators.POPUP_BUTTON_YT);
 
         for (String song : songs) {
-            driver.get("https://www.youtube.com/");
             try {
-                WebElement searchBox = Constants.WAIT_SLOW.until(ExpectedConditions.elementToBeClickable(Locators.SEARCH_INPUT));
-                searchBox.sendKeys(song + Keys.ENTER);
+                String[] command = new String[]{
+                        "yt-dlp", "'" + "ytsearch:" + song + "'", "--get-id"
+                };
 
-                if (Helper.isElementVisible(Constants.WAIT_MEDIUM, Locators.ONLY_VIDEOS_BUTTON)) {
-                    Actions.clickElement(Constants.WAIT_FAST, Locators.ONLY_VIDEOS_BUTTON);
+                ProcessBuilder processBuilder = new ProcessBuilder(command);
+                Process process = processBuilder.start();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String videoUrl = reader.readLine();
+
+                if (videoUrl != null && !videoUrl.isEmpty()) {
+                    urls.add("https://www.youtube.com/watch?v=" + videoUrl);
+                    logger.info("Found URL for song: " + song + " - " + videoUrl);
                 } else {
-                    Actions.clickElement(Constants.WAIT_MEDIUM, Locators.FILTER_BUTTON);
-                    Actions.clickElement(Constants.WAIT_FAST, Locators.ONLY_VIDEOS_FILTER_BUTTON);
+                    logger.warn("No URL found for song: " + song);
                 }
 
-                Constants.WAIT_SLOW.until(ExpectedConditions.visibilityOfElementLocated(Locators.FIRST_RESULT));
-                String videoUrl = driver.findElement(Locators.FIRST_RESULT).getDomAttribute("href");
-
-                urls.add(videoUrl);
+                process.waitFor();
             } catch (Exception e) {
                 logger.error("Song searching error: " + song + ": " + e.getMessage());
             }
         }
-        driver.quit();
     }
 
     public static void downloadSongAction() {

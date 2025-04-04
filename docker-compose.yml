@@ -29,6 +29,7 @@ services:
       - DOWNLOAD_PATH=/target
     volumes:
       - /mnt/storage/media/music/:/target
+      - ./screenshots:/app/screenshots
     networks:
       - selenium-network
 

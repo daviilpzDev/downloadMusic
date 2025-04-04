@@ -2,17 +2,18 @@ package org.example.hooks;
 
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
-import io.github.bonigarcia.wdm.WebDriverManager;
+import io.cucumber.java.Scenario;
 import org.example.utils.ChromeOptionsUtil;
-import org.example.utils.postactions.PostActions;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
 
 public class Hooks {
     public static WebDriver driver;
@@ -30,9 +31,24 @@ public class Hooks {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown(Scenario scenario) {
+        if (scenario.isFailed()) {
+            takeScreenshot(scenario.getName());
+        }
+
         if (driver != null) {
             driver.quit();
+        }
+    }
+
+    // Método para tomar capturas de pantalla
+    private void takeScreenshot(String screenshotName) {
+        TakesScreenshot screenshotTaker = (TakesScreenshot) driver;
+        File screenshot = screenshotTaker.getScreenshotAs(OutputType.FILE);
+        try {
+            FileUtils.copyFile(screenshot, new File("./screenshots/" + screenshotName + ".png"));
+        } catch (IOException e) {
+            System.out.println("Error al guardar la captura de pantalla: " + e.getMessage());
         }
     }
 }

@@ -5,8 +5,8 @@ import org.example.utils.Helper;
 
 public class PostActions {
     public static void deleteNotNeededFiles() {
-        PostActionsMethods.deleteNotNeededFiles(Helper.loadSMB());
-        PostActionsMethods.moveFilesToSMB();
+//        PostActionsMethods.deleteNotNeededFiles(Helper.loadSMB());
+//        PostActionsMethods.moveFilesToSMB();
     }
 
 }

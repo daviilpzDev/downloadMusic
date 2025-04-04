@@ -7,24 +7,30 @@ import org.example.utils.ChromeOptionsUtil;
 import org.example.utils.postactions.PostActions;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 
 public class Hooks {
     public static WebDriver driver;
-    public static String downloadFilepath;
+    public static final String downloadFilepath = System.getenv("DOWNLOAD_PATH") != null
+            ? System.getenv("DOWNLOAD_PATH")
+            : "/mnt/storage/media/music/";
 
     @Before
     public void setUp() {
-        WebDriverManager.chromedriver().setup();
-        downloadFilepath = System.getProperty("user.dir") + "/target/";
-        driver = new ChromeDriver(ChromeOptionsUtil.getChromeOptions(downloadFilepath));
+        try {
+            driver = new RemoteWebDriver(new URL(System.getenv("SELENIUM_URL")), ChromeOptionsUtil.getChromeOptions(downloadFilepath));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Error en la URL de Selenium Grid", e);
+        }
     }
 
     @After
     public void tearDown() {
-        PostActions.deleteNotNeededFiles();
         if (driver != null) {
             driver.quit();
         }

@@ -3,6 +3,7 @@ package org.example.utils.postactions;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFileOutputStream;
+import org.example.hooks.Hooks;
 import org.example.utils.Constants;
 import org.example.utils.Helper;
 import org.slf4j.Logger;
@@ -65,7 +66,7 @@ public class PostActionsMethods {
 
     public static void moveFilesToSMB() {
         try {
-            File folder = new File(Constants.downloadFilepath);
+            File folder = new File(Hooks.downloadFilepath);
             File[] files = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
 
             if (files == null || files.length == 0) {

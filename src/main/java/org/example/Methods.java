@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.hooks.Hooks;
 import org.example.utils.Actions;
 import org.example.utils.Constants;
 import org.example.utils.Globals;
@@ -58,7 +59,7 @@ public class Methods {
         for (String song : songs) {
             try {
                 String[] command = new String[]{
-                        "yt-dlp", "-x", "--audio-format", "mp3", "-o", Constants.downloadFilepath + "%(title)s.%(ext)s" , "https://www.youtube.com"+ song
+                        "yt-dlp", "-x", "--audio-format", "mp3", "-o", Hooks.downloadFilepath + "%(title)s.%(ext)s" , "https://www.youtube.com"+ song
                 };
 
                 ProcessBuilder processBuilder = new ProcessBuilder(command);

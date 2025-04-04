@@ -15,5 +15,4 @@ public class Constants {
     public static final WebDriverWait WAIT_FASTER = new WebDriverWait(driver, Duration.ofSeconds(10));
     public static final WebDriverWait WAIT_MEDIUM = new WebDriverWait(driver, Duration.ofSeconds(15));
     public static final WebDriverWait WAIT_SLOW = new WebDriverWait(driver, Duration.ofSeconds(30));
-    public static final String downloadFilepath = System.getProperty("user.dir") + "/target/";
 }

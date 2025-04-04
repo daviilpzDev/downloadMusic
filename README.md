@@ -5,7 +5,9 @@
 
 1. Put your music list in `/src/test/resources/data/songs.yml`
 2. Install Navidrome in your server with docker compose (https://www.navidrome.org/docs/installation/docker/)
-
+3. Put in Navidrome volumes :
+    - `ubication/to/save/navidrome/data/:/data`
+    - `/mnt/storage/media/music/:/music` (Where music will be downloaded)
 ---
 
 # Server Deployment Guide

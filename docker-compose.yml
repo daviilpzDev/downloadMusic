@@ -1,0 +1,14 @@
+services:
+  downloader:
+    build: .
+    container_name: music-downloader
+    environment:
+      - DOWNLOAD_PATH=/target/
+    volumes:
+      - /mnt/storage/media/music/:/target/
+    networks:
+      - downloader-network
+
+networks:
+  downloader-network:
+    driver: bridge

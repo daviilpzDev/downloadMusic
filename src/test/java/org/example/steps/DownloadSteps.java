@@ -8,14 +8,9 @@ import static org.example.hooks.Hooks.*;
 
 public class DownloadSteps {
 
-    @Given("I navigate to {string} page")
-    public void i_navigate_to_page(String url) {
-        driver.get(url);
-    }
-
     @When("search song and get the url")
     public void searchSongAndGetTheUrl() {
-        Methods.searchSongAndGetTheUrl(driver);
+        Methods.searchSongAndGetTheUrl();
     }
 
     @Then("I enter the video URL into the input field$")

@@ -1,13 +1,8 @@
 package org.example.utils;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.yaml.snakeyaml.Yaml;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-
 import java.util.List;
 import java.util.Map;
 

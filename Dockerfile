@@ -10,7 +10,6 @@ RUN mvn dependency:go-offline
 
 # Copiar código fuente
 COPY src ./src
-COPY test ./test
 
 # Construir el proyecto sin ejecutar pruebas
 RUN mvn clean package -DskipTests
@@ -33,7 +32,7 @@ WORKDIR /app
 # Copiar el código y la configuración
 COPY --from=build /app /app
 COPY .env ./
-COPY test/resources/data/songs.yml /app/data/songs.yml
+COPY /src/test/resources/data/songs.yml /app/data/songs.yml
 
 # Definir variable de entorno para descargas
 ENV DOWNLOAD_PATH="/target"

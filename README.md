@@ -4,6 +4,7 @@
 # PREREQUISITES
 
 1. Put your music list in `/src/test/resources/data/songs.yml`
+2. Install Navidrome in your server with docker compose (https://www.navidrome.org/docs/installation/docker/)
 
 ---
 
@@ -26,7 +27,7 @@ rsync -avz ./downloadMusic user@server-ip:/destination/path
 
 Connect to your server via SSH:
 ```bash
-ssh user@server-ip
+ssh -i example user@server-ip
 ```
 **Note:** Replace `user` and `server-ip` with your actual values.
 

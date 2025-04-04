@@ -25,8 +25,10 @@ public class Methods {
         for (String song : songs) {
             try {
                 String[] command = new String[]{
-                        "yt-dlp", "'" + "ytsearch:" + song + "'", "--get-id"
+                        "yt-dlp", "ytsearch:" + song, "--get-id"
                 };
+
+                System.out.println("Comando generado: " + String.join(" ", command));
 
                 ProcessBuilder processBuilder = new ProcessBuilder(command);
                 Process process = processBuilder.start();
@@ -53,7 +55,7 @@ public class Methods {
         for (String song : songs) {
             try {
                 String[] command = new String[]{
-                        "yt-dlp", "-x", "--audio-format", "mp3", "-o", Hooks.downloadFilepath + "%(title)s.%(ext)s" , "https://www.youtube.com"+ song
+                        "yt-dlp", "-x", "--audio-format", "mp3", "-o", Hooks.downloadFilepath + "%(title)s.%(ext)s" , song
                 };
 
                 ProcessBuilder processBuilder = new ProcessBuilder(command);

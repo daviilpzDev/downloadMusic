@@ -26,11 +26,6 @@ RUN apt-get update && apt-get install -y \
     pip3 install --upgrade yt-dlp && \
     rm -rf /var/lib/apt/lists/*
 
-# Establecer idioma predeterminado
-ENV LANG=es_ES.UTF-8
-ENV LANGUAGE=es_ES.UTF-8
-ENV LC_ALL=es_ES.UTF-8
-
 # Establecer directorio de trabajo
 WORKDIR /app
 

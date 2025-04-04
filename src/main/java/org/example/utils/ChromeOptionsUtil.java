@@ -14,7 +14,7 @@ public class ChromeOptionsUtil {
 
         ChromeOptions options = new ChromeOptions();
         options.setExperimentalOption("prefs", prefs);
-        options.addArguments("--lang=es");
+//        options.addArguments("--lang=es");
         options.addArguments("--no-sandbox");
         options.addArguments("--start-maximized");
 //        options.addArguments("--headless");

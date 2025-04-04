@@ -36,10 +36,10 @@ public class Methods {
                 WebElement searchBox = Constants.WAIT_SLOW.until(ExpectedConditions.elementToBeClickable(Locators.SEARCH_INPUT));
                 searchBox.sendKeys(song + Keys.ENTER);
 
-                if (Helper.isElementVisible(Constants.WAIT_SUPER_FAST, Locators.ONLY_VIDEOS_BUTTON)) {
+                if (Helper.isElementVisible(Constants.WAIT_MEDIUM, Locators.ONLY_VIDEOS_BUTTON)) {
                     Actions.clickElement(Constants.WAIT_FAST, Locators.ONLY_VIDEOS_BUTTON);
                 } else {
-                    Actions.clickElement(Constants.WAIT_SUPER_FAST, Locators.FILTER_BUTTON);
+                    Actions.clickElement(Constants.WAIT_MEDIUM, Locators.FILTER_BUTTON);
                     Actions.clickElement(Constants.WAIT_FAST, Locators.ONLY_VIDEOS_FILTER_BUTTON);
                 }
 

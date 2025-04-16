@@ -10,7 +10,8 @@ public class Actions {
 
     public static List<String> getYmlFile(String fileName) {
         Yaml yaml = new Yaml();
-        String filePath = System.getProperty("user.dir") + "/src/test/resources/data/" + fileName + ".yml";
+        String ymlBasePath = System.getenv().getOrDefault("YML_PATH", System.getProperty("user.dir") + "/src/test/resources/data");
+        String filePath = ymlBasePath + "/" + fileName + ".yml";
 
         try {
             FileInputStream inputStream = new FileInputStream(filePath);

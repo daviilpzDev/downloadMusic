@@ -31,7 +31,6 @@ WORKDIR /app
 
 # Copiar el código y la configuración
 COPY --from=build /app /app
-COPY .env ./
 
 # Definir variable de entorno para descargas
 ENV DOWNLOAD_PATH="/target"

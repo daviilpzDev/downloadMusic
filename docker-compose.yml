@@ -4,11 +4,9 @@ services:
     container_name: music-downloader
     environment:
       - DOWNLOAD_PATH=/target/
+      - YML_PATH=/app/data
     volumes:
       - /mnt/storage/media/music/:/target/
+      - /home/lpzserv/downloadMusic/src/test/resources/data/songs.yml:/app/data/songs.yml:ro
     networks:
       - downloader-network
-
-networks:
-  downloader-network:
-    driver: bridge

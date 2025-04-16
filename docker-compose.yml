@@ -10,3 +10,7 @@ services:
       - /home/lpzserv/downloadMusic/src/test/resources/data/songs.yml:/app/data/songs.yml:ro
     networks:
       - downloader-network
+
+networks:
+  downloader-network:
+    driver: bridge

@@ -44,7 +44,8 @@ cd /destination/path/downloadMusic
 
 To build the Docker images and start the containers, run:
 ```bash
-docker-compose up --build -d
+docker build -t downloadmusic:latest .
+docker-compose up -d
 ```
 
 ### Explanation of options:

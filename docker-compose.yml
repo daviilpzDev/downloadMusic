@@ -1,6 +1,6 @@
 services:
-  downloader:
-    build: .
+  downloadmusic:
+    image: downloadmusic:latest
     container_name: music-downloader
     environment:
       - DOWNLOAD_PATH=/target/

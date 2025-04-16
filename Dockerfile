@@ -32,7 +32,6 @@ WORKDIR /app
 # Copiar el código y la configuración
 COPY --from=build /app /app
 COPY .env ./
-COPY /src/test/resources/data/songs.yml /app/data/songs.yml
 
 # Definir variable de entorno para descargas
 ENV DOWNLOAD_PATH="/target"

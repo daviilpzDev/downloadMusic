@@ -62,8 +62,6 @@ public class Methods {
         for (String url : urls) {
             try {
                 String songNameRaw = urlToSongMap.getOrDefault(url, "Unknown");
-                File dir = new File(Hooks.downloadFilepath);
-                File lastBefore = getLatestMp3File(dir);
 
                 String[] command = new String[]{
                         "yt-dlp", "-x", "--audio-format", "mp3",
@@ -76,8 +74,15 @@ public class Methods {
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
+                String downloadedFilename = null;
+
                 while ((line = reader.readLine()) != null) {
                     logger.info(line);
+
+                    if (line.toLowerCase().contains("[extractaudio] destination:")) {
+                        int index = line.toLowerCase().indexOf("destination:") + "destination:".length();
+                        downloadedFilename = line.substring(index).trim();
+                    }
                 }
 
                 BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -86,25 +91,20 @@ public class Methods {
                 }
 
                 int exitCode = process.waitFor();
-                if (exitCode == 0) {
+                if (exitCode == 0 && downloadedFilename != null) {
                     logger.info("¡Descarga completada exitosamente!");
 
-                    File lastAfter = getLatestMp3File(dir);
+                    File originalFile = new File(downloadedFilename);
+                    String sanitizedTargetName = sanitizeFilename(songNameRaw) + ".mp3";
+                    File renamedFile = new File(Hooks.downloadFilepath + sanitizedTargetName);
 
-                    if (lastAfter != null && (lastBefore == null || !lastBefore.getName().equals(lastAfter.getName()))) {
-                        String sanitizedTargetName = sanitizeFilename(songNameRaw) + ".mp3";
-                        File newFile = new File(Hooks.downloadFilepath + sanitizedTargetName);
-
-                        if (lastAfter.renameTo(newFile)) {
-                            logger.info("Archivo renombrado a: " + newFile.getName());
-                        } else {
-                            logger.warn("No se pudo renombrar el archivo: " + lastAfter.getName());
-                        }
+                    if (originalFile.renameTo(renamedFile)) {
+                        logger.info("Archivo renombrado a: " + renamedFile.getName());
                     } else {
-                        logger.warn("No se detectó un nuevo archivo .mp3 descargado.");
+                        logger.warn("No se pudo renombrar el archivo: " + originalFile.getName());
                     }
                 } else {
-                    logger.error("Error durante la descarga de: " + songNameRaw);
+                    logger.error("No se detectó el archivo descargado para: " + songNameRaw);
                 }
 
             } catch (Exception e) {
@@ -117,15 +117,6 @@ public class Methods {
         return IntStream.range(0, songs.size())
                 .boxed()
                 .collect(Collectors.toMap(urls::get, songs::get));
-    }
-
-    private static File getLatestMp3File(File dir) {
-        File[] mp3Files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".mp3"));
-        if (mp3Files == null || mp3Files.length == 0) return null;
-
-        return Arrays.stream(mp3Files)
-                .max(Comparator.comparingLong(File::lastModified))
-                .orElse(null);
     }
 
     private static String sanitizeFilename(String name) {

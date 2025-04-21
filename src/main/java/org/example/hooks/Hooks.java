@@ -7,9 +7,7 @@ import io.cucumber.java.Scenario;
 public class Hooks {
     public static final String downloadFilepath = System.getenv("DOWNLOAD_PATH") != null
             ? System.getenv("DOWNLOAD_PATH")
-            : "/target/";
-
-//    public static final String downloadFilepath = System.getProperty("user.dir") + "/target/";
+            : System.getProperty("user.dir") + "/target/";
 
     @Before
     public void setUp() {

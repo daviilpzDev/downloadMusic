@@ -35,5 +35,8 @@ COPY --from=build /app /app
 # Definir variable de entorno para descargas
 ENV DOWNLOAD_PATH="/target"
 
-# Ejecutar pruebas de Cucumber con Maven
-CMD ["mvn", "test"]
+# Configurar Maven para evitar problemas de memoria
+ENV MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=128m"
+
+# Ejecutar pruebas de Cucumber con Maven con timeout
+CMD ["timeout", "300", "mvn", "test", "-Dtest=RunCucumberTest"]

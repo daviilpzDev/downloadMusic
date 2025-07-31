@@ -36,14 +36,14 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-suite-api</artifactId>
-            <version>1.8.2</version>
+            <version>1.9.2</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-suite-engine</artifactId>
-            <version>1.8.2</version>
+            <version>1.9.2</version>
             <scope>test</scope>
         </dependency>
 
@@ -61,16 +61,23 @@
 
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <artifactId>slf4j-api</artifactId>
             <version>2.0.17</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.14</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.17</version>
-            <scope>compile</scope>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.3.1</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -91,9 +98,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M5</version>
                 <configuration>
-                    <dependenciesToScan>
-                        <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
-                    </dependenciesToScan>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>

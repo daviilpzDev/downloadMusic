@@ -1,104 +1,148 @@
 
 ---
 
-# PREREQUISITES
+# Download Music - Cucumber Test Project
 
-1. Put your music list in `/src/test/resources/data/songs.yml`
-2. Install Navidrome in your server with docker compose (https://www.navidrome.org/docs/installation/docker/)
-3. Put in Navidrome volumes :
-    - `ubication/to/save/navidrome/data/:/data`
-    - `/mnt/storage/media/music/:/music` (Where music will be downloaded)
----
+Este proyecto automatiza la descarga de música desde YouTube utilizando Cucumber para las pruebas de comportamiento y yt-dlp para las descargas.
 
-# Server Deployment Guide
+## 🏗️ Arquitectura del Proyecto
 
-This document explains the steps to upload, build, and run the `downloadMusic` project on a server using Docker.
-
-## 1️⃣ Upload the Files to the Server
-
-To transfer the project files from your local machine to the server, you can use `scp` or `rsync`:
-
-### Using `rsync`:
-```bash
-rsync -avz ./downloadMusic user@server-ip:/destination/path
+```
+src/
+├── main/java/org/example/
+│   ├── services/
+│   │   └── DownloadService.java      # Lógica de descarga de música
+│   ├── utils/
+│   │   ├── Actions.java              # Utilidades para archivos YAML
+│   │   ├── Constants.java            # Constantes centralizadas
+│   │   └── Globals.java              # Variables globales
+│   └── Methods.java                  # Puntos de entrada para Cucumber
+├── test/java/org/example/
+│   ├── hooks/
+│   │   └── Hooks.java               # Hooks de Cucumber
+│   ├── runner/
+│   │   └── RunCucumberTest.java     # Runner de pruebas
+│   ├── services/
+│   │   └── DownloadServiceTest.java  # Tests unitarios
+│   └── steps/
+│       └── DownloadSteps.java       # Definiciones de pasos
+└── test/resources/
+    ├── features/
+    │   └── downloads.feature         # Escenarios de Cucumber
+    ├── data/
+    │   └── songs.yml                 # Lista de canciones
+    ├── cucumber.properties           # Configuración de Cucumber
+    └── logback-test.xml             # Configuración de logging
 ```
 
-**Note:** Make sure you have `scp` or `rsync` installed on your local machine. You can also use `git clone` if you have Git installed on the server.
+## 🚀 Funcionalidades
 
-## 2️⃣ Access the Server
+- **Búsqueda automática**: Busca URLs de YouTube para canciones especificadas
+- **Descarga de audio**: Descarga y convierte videos a formato MP3
+- **Renombrado automático**: Renombra archivos según el nombre de la canción
+- **Logging detallado**: Registro completo de todas las operaciones
+- **Manejo de errores**: Gestión robusta de excepciones
 
-Connect to your server via SSH:
-```bash
-ssh -i example user@server-ip
-```
-**Note:** Replace `user` and `server-ip` with your actual values.
+## 🛠️ Tecnologías Utilizadas
 
-## 3️⃣ Navigate to the Project Directory
+- **Java 11**: Lenguaje de programación
+- **Maven**: Gestión de dependencias y build
+- **Cucumber 7.11.0**: Framework de BDD
+- **JUnit 5**: Framework de testing
+- **yt-dlp**: Herramienta de descarga de YouTube
+- **Logback**: Sistema de logging
+- **SnakeYAML**: Procesamiento de archivos YAML
+- **Docker**: Contenedorización
 
-Once connected to the server, navigate to the directory where you uploaded the project:
-```bash
-cd /destination/path/downloadMusic
-```
+## 📋 Prerrequisitos
 
-## 4️⃣ Build and Start the Containers
+- Java 11 o superior
+- Maven 3.6+
+- yt-dlp instalado
+- ffmpeg instalado
 
-To build the Docker images and start the containers, run:
-```bash
-docker build -t downloadmusic:latest .
-docker-compose up -d
-```
+## 🔧 Instalación
 
-### Explanation of options:
-- `--build`: Forces a rebuild of the images with the latest changes.
-- `-d`: Runs the containers in the background (detached mode).
+### Instalación Local
 
-To verify that the containers are running, use:
-```bash
-docker ps
-```
+1. **Clonar el repositorio**:
+   ```bash
+   git clone <repository-url>
+   cd downloadMusic
+   ```
 
-## 5️⃣ Review the Logs
+2. **Instalar dependencias**:
+   ```bash
+   mvn clean install
+   ```
 
-If you need to check what is happening inside the containers, you can view the logs by running:
-```bash
-docker-compose logs -f
-```
-**Note:** Use `CTRL + C` to exit the logs.
+3. **Configurar variables de entorno** (opcional):
+   ```bash
+   export DOWNLOAD_PATH="/path/to/downloads/"
+   export YML_PATH="/path/to/data/"
+   ```
 
-To view logs of a specific container (e.g., `music-downloader`):
-```bash
-docker logs -f music-downloader
-```
+### Instalación con Docker
 
-## 6️⃣ Run Tests Manually
+1. **Construir la imagen**:
+   ```bash
+   docker build -t downloadmusic:latest .
+   ```
 
-If you want to run the tests manually inside the container, first access the container:
-```bash
-docker exec -it music-downloader bash
-```
+2. **Ejecutar el contenedor**:
+   ```bash
+   docker run -v /path/to/downloads:/target downloadmusic:latest
+   ```
 
-Then, inside the container, run the tests with:
+## 🧪 Ejecutar Pruebas
+
+### Ejecutar todas las pruebas
 ```bash
 mvn test
 ```
 
-## 7️⃣ Manage Containers
+### Ejecutar pruebas específicas
+```bash
+mvn test -Dtest=RunCucumberTest
+```
 
-Here are some useful commands to manage the containers:
+## 📁 Configuración
 
-- **Stop all containers:**
-  ```bash
-  docker-compose down
-  ```
+### Archivo de canciones (songs.yml)
+```yaml
+songs:
+  - "Nombre de la canción - Artista"
+  - "Otra canción - Otro artista"
+```
 
-- **Restart the containers:**
-  ```bash
-  docker-compose restart
-  ```
+### Variables de entorno
+- `DOWNLOAD_PATH`: Ruta donde se guardarán las descargas
+- `YML_PATH`: Ruta donde se encuentra el archivo songs.yml
 
-- **Remove old images and containers (cleanup):**
-  ```bash
-  docker system prune -af
-  ```
+## 🔍 Troubleshooting
 
----
+### Problemas Comunes
+
+1. **Error de compilación**:
+   ```bash
+   mvn clean compile
+   ```
+
+2. **Problemas con yt-dlp**:
+   ```bash
+   pip3 install --upgrade yt-dlp
+   ```
+
+3. **Problemas de permisos**:
+   ```bash
+   chmod +x /usr/local/bin/yt-dlp
+   ```
+
+4. **Problemas de memoria en Docker**:
+   ```bash
+   docker run --memory=1g downloadmusic:latest
+   ```
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.

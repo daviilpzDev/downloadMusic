@@ -10,184 +10,92 @@ import org.example.services.backends.BackendMetrics;
 import org.example.services.backends.DownloadBackendService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * Servicio avanzado de descarga que integra múltiples backends
- * y proporciona funcionalidades mejoradas como fallback automático,
- * métricas de rendimiento y descarga paralela
+ * Servicio avanzado de descarga que implementa fallback automático entre backends
+ * Prioridad: JTube → yt-dlp → HTTP Direct
  */
 @Slf4j
 public class AdvancedDownloadService {
     
-    private final ExecutorService executorService;
-    private final List<DownloadBackendService> backends;
-    private DownloadBackendService primaryBackend;
+    // Orden de prioridad de backends (del más rápido al más lento)
+    private static final DownloadBackend[] BACKEND_PRIORITY = {
+        DownloadBackend.JTUBE,      // 1. Más rápido, Java nativo
+        DownloadBackend.YT_DLP,     // 2. Robusto, herramienta externa
+        DownloadBackend.HTTP_DIRECT // 3. Fallback final
+    };
+    
+    private final List<DownloadBackendService> availableBackends;
     
     public AdvancedDownloadService() {
-        this.executorService = Executors.newFixedThreadPool(4);
-        this.backends = new ArrayList<>();
-        initializeBackends();
+        this.availableBackends = initializeBackends();
+        log.info("🚀 AdvancedDownloadService iniciado con {} backends disponibles", availableBackends.size());
     }
     
     /**
-     * Inicializa todos los backends disponibles
+     * Busca y descarga una canción usando fallback automático
      */
-    private void initializeBackends() {
-        log.info("🚀 Inicializando backends de descarga...");
+    public DownloadResult searchAndDownload(String searchTerm, String outputPath) {
+        log.info("🔍 Iniciando búsqueda y descarga: '{}'", searchTerm);
         
-        for (DownloadBackend backendType : DownloadBackend.values()) {
-            try {
-                if (backendType.isAvailable()) {
-                    DownloadBackendService backend = BackendFactory.createBackend(backendType);
-                    backends.add(backend);
-                    log.info("✅ Backend habilitado: {}", backend.getBackendName());
-                } else {
-                    log.warn("⚠️ Backend no disponible: {}", backendType.getDescription());
-                }
-            } catch (Exception e) {
-                log.error("❌ Error inicializando backend {}: {}", 
-                         backendType.getDescription(), e.getMessage());
-            }
+        if (availableBackends.isEmpty()) {
+            log.error("❌ No hay backends disponibles");
+            return DownloadResult.builder()
+                    .success(false)
+                    .errorMessage("No hay backends disponibles")
+                    .build();
         }
         
-        if (backends.isEmpty()) {
-            throw new RuntimeException("❌ No hay backends disponibles para descarga");
-        }
-        
-        // Establecer backend primario (el primero disponible por orden de preferencia)
-        this.primaryBackend = backends.get(0);
-        log.info("🎯 Backend primario: {}", primaryBackend.getBackendName());
-    }
-    
-    /**
-     * Busca y descarga múltiples canciones de forma inteligente
-     */
-    public List<DownloadResult> searchAndDownloadSongs(List<String> songQueries, String outputPath) {
-        log.info("🎵 Iniciando descarga inteligente de {} canciones", songQueries.size());
-        
-        List<CompletableFuture<DownloadResult>> futures = songQueries.stream()
-                .map(query -> searchAndDownloadSongAsync(query, outputPath))
-                .toList();
-        
-        // Esperar a que todas las descargas terminen
-        List<DownloadResult> results = futures.stream()
-                .map(CompletableFuture::join)
-                .toList();
-        
-        // Estadísticas finales
-        long successful = results.stream().mapToLong(r -> r.isSuccess() ? 1 : 0).sum();
-        log.info("🎯 Descarga completada: {}/{} exitosas", successful, results.size());
-        
-        return results;
-    }
-    
-    /**
-     * Busca y descarga una canción de forma asíncrona
-     */
-    private CompletableFuture<DownloadResult> searchAndDownloadSongAsync(String query, String outputPath) {
-        return CompletableFuture.supplyAsync(() -> {
+        // Intentar con cada backend en orden de prioridad
+        for (int i = 0; i < availableBackends.size(); i++) {
+            DownloadBackendService backend = availableBackends.get(i);
+            String backendName = backend.getBackendName();
+            
+            log.info("🔄 Intentando con backend {} ({}/{}): {}", 
+                    backendName, i + 1, availableBackends.size(), backendName);
+            
             try {
-                // 1. Buscar la canción
-                Optional<VideoInfo> videoInfo = smartSearch(query);
-                if (videoInfo.isEmpty()) {
-                    return DownloadResult.builder()
-                            .success(false)
-                            .errorMessage("No se encontró la canción: " + query)
-                            .build();
+                // Paso 1: Buscar información del video
+                Optional<VideoInfo> videoInfoOpt = backend.searchVideo(searchTerm);
+                
+                if (videoInfoOpt.isEmpty()) {
+                    log.warn("⚠️ Backend {} no encontró información para: '{}'", backendName, searchTerm);
+                    continue; // Probar siguiente backend
                 }
                 
-                // 2. Crear request de descarga
+                VideoInfo videoInfo = videoInfoOpt.get();
+                log.info("✅ Backend {} encontró: '{}'", backendName, videoInfo.getTitle());
+                
+                // Paso 2: Intentar descarga
                 DownloadRequest request = DownloadRequest.builder()
-                        .videoInfo(videoInfo.get())
+                        .videoInfo(videoInfo)
                         .outputPath(outputPath)
                         .audioFormat(DownloadRequest.AudioFormat.MP3)
-                        .audioQuality(DownloadRequest.AudioQuality.HIGH)
-                        .overwriteExisting(false)
+                        .audioQuality(DownloadRequest.AudioQuality.MEDIUM)
+                        .overwriteExisting(true)
                         .build();
                 
-                // 3. Descargar con fallback automático
-                return downloadWithFallback(request);
-                
-            } catch (Exception e) {
-                log.error("❌ Error en descarga asíncrona de '{}': {}", query, e.getMessage());
-                return DownloadResult.builder()
-                        .success(false)
-                        .errorMessage(e.getMessage())
-                        .build();
-            }
-        }, executorService);
-    }
-    
-    /**
-     * Búsqueda inteligente que prueba múltiples backends
-     */
-    private Optional<VideoInfo> smartSearch(String query) {
-        log.info("🔍 Búsqueda inteligente: '{}'", query);
-        
-        // Primero intentar con el backend primario
-        Optional<VideoInfo> result = primaryBackend.searchVideo(query);
-        if (result.isPresent()) {
-            log.info("✅ Encontrado con backend primario: {}", result.get().getTitle());
-            return result;
-        }
-        
-        // Si falla, intentar con otros backends
-        for (DownloadBackendService backend : backends) {
-            if (backend == primaryBackend) continue;
-            
-            try {
-                result = backend.searchVideo(query);
-                if (result.isPresent()) {
-                    log.info("✅ Encontrado con backend alternativo {}: {}", 
-                            backend.getBackendName(), result.get().getTitle());
-                    return result;
-                }
-            } catch (Exception e) {
-                log.warn("⚠️ Error en búsqueda con {}: {}", backend.getBackendName(), e.getMessage());
-            }
-        }
-        
-        log.warn("❌ No se encontró: '{}'", query);
-        return Optional.empty();
-    }
-    
-    /**
-     * Descarga con fallback automático entre backends
-     */
-    private DownloadResult downloadWithFallback(DownloadRequest request) {
-        log.info("📥 Descargando con fallback: '{}'", request.getVideoInfo().getTitle());
-        
-        // Intentar con el backend primario
-        DownloadResult result = primaryBackend.downloadAudio(request);
-        if (result.isSuccess()) {
-            return result;
-        }
-        
-        log.warn("⚠️ Fallo en backend primario, intentando alternativas...");
-        
-        // Intentar con backends alternativos
-        for (DownloadBackendService backend : backends) {
-            if (backend == primaryBackend) continue;
-            
-            try {
-                log.info("🔄 Intentando con backend: {}", backend.getBackendName());
-                result = backend.downloadAudio(request);
+                DownloadResult result = backend.downloadAudio(request);
                 
                 if (result.isSuccess()) {
-                    log.info("✅ Descarga exitosa con backend alternativo: {}", backend.getBackendName());
+                    log.info("🎉 Descarga exitosa con backend {}: {}", backendName, result.getFileName());
                     return result;
+                } else {
+                    log.warn("⚠️ Backend {} falló en descarga: {}", backendName, result.getErrorMessage());
+                    // Continuar con siguiente backend
                 }
+                
             } catch (Exception e) {
-                log.warn("⚠️ Error con backend {}: {}", backend.getBackendName(), e.getMessage());
+                log.error("❌ Error con backend {}: {}", backendName, e.getMessage());
+                // Continuar con siguiente backend
             }
         }
         
-        log.error("❌ Falló la descarga con todos los backends disponibles");
+        // Si llegamos aquí, todos los backends fallaron
+        log.error("❌ Todos los backends fallaron para: '{}'", searchTerm);
         return DownloadResult.builder()
                 .success(false)
                 .errorMessage("Todos los backends fallaron")
@@ -195,43 +103,134 @@ public class AdvancedDownloadService {
     }
     
     /**
+     * Descarga múltiples canciones con fallback automático
+     */
+    public List<DownloadResult> searchAndDownloadMultiple(List<String> searchTerms, String outputPath) {
+        log.info("🎵 Iniciando descarga múltiple: {} canciones", searchTerms.size());
+        
+        List<DownloadResult> results = new ArrayList<>();
+        
+        for (int i = 0; i < searchTerms.size(); i++) {
+            String searchTerm = searchTerms.get(i);
+            log.info("🔄 Procesando canción {}/{}: '{}'", i + 1, searchTerms.size(), searchTerm);
+            
+            DownloadResult result = searchAndDownload(searchTerm, outputPath);
+            results.add(result);
+            
+            // Mostrar progreso
+            if (result.isSuccess()) {
+                log.info("✅ {}/{} completada: {}", i + 1, searchTerms.size(), result.getFileName());
+            } else {
+                log.error("❌ {}/{} falló: {}", i + 1, searchTerms.size(), searchTerm);
+            }
+        }
+        
+        // Resumen final
+        long successful = results.stream().mapToLong(r -> r.isSuccess() ? 1 : 0).sum();
+        log.info("📊 Resumen: {}/{} descargas exitosas", successful, results.size());
+        
+        return results;
+    }
+    
+    /**
+     * Obtiene información de video con fallback automático
+     */
+    public Optional<VideoInfo> getVideoInfo(String searchTerm) {
+        log.info("📋 Obteniendo información de: '{}'", searchTerm);
+        
+        for (DownloadBackendService backend : availableBackends) {
+            try {
+                Optional<VideoInfo> result = backend.searchVideo(searchTerm);
+                if (result.isPresent()) {
+                    log.info("✅ Información obtenida con {}: '{}'", 
+                            backend.getBackendName(), result.get().getTitle());
+                    return result;
+                }
+            } catch (Exception e) {
+                log.debug("Backend {} falló: {}", backend.getBackendName(), e.getMessage());
+            }
+        }
+        
+        log.warn("⚠️ No se pudo obtener información para: '{}'", searchTerm);
+        return Optional.empty();
+    }
+    
+    /**
      * Obtiene métricas de todos los backends
      */
     public List<BackendMetrics> getAllBackendMetrics() {
-        return backends.stream()
+        return availableBackends.stream()
                 .map(DownloadBackendService::getMetrics)
                 .toList();
     }
     
     /**
-     * Obtiene información de status del servicio
+     * Obtiene el estado de disponibilidad de todos los backends
      */
-    public ServiceStatus getServiceStatus() {
-        return ServiceStatus.builder()
-                .availableBackends(backends.size())
-                .primaryBackend(primaryBackend.getBackendName())
-                .allBackends(backends.stream().map(DownloadBackendService::getBackendName).toList())
-                .metrics(getAllBackendMetrics())
-                .build();
+    public List<BackendStatus> getBackendStatus() {
+        List<BackendStatus> statusList = new ArrayList<>();
+        
+        for (DownloadBackend backendType : BACKEND_PRIORITY) {
+            boolean available = backendType.isAvailable();
+            statusList.add(new BackendStatus(
+                    backendType.getDescription(),
+                    available,
+                    available ? "Disponible" : "No disponible"
+            ));
+        }
+        
+        return statusList;
     }
     
     /**
-     * Modelo para el status del servicio
+     * Inicializa los backends disponibles en orden de prioridad
      */
-    @lombok.Builder
-    @lombok.Data
-    public static class ServiceStatus {
-        private int availableBackends;
-        private String primaryBackend;
-        private List<String> allBackends;
-        private List<BackendMetrics> metrics;
+    private List<DownloadBackendService> initializeBackends() {
+        List<DownloadBackendService> backends = new ArrayList<>();
+        
+        for (DownloadBackend backendType : BACKEND_PRIORITY) {
+            if (backendType.isAvailable()) {
+                try {
+                    DownloadBackendService backend = BackendFactory.createBackend(backendType);
+                    backends.add(backend);
+                    log.info("✅ Backend habilitado: {} ({})", 
+                            backendType.getDescription(), backend.getBackendName());
+                } catch (Exception e) {
+                    log.warn("⚠️ Error inicializando backend {}: {}", 
+                            backendType.getDescription(), e.getMessage());
+                }
+            } else {
+                log.warn("❌ Backend no disponible: {}", backendType.getDescription());
+            }
+        }
+        
+        if (backends.isEmpty()) {
+            log.error("❌ ¡CRÍTICO! No hay backends disponibles");
+        } else {
+            log.info("🎯 Sistema de fallback configurado con {} backends", backends.size());
+        }
+        
+        return backends;
     }
     
     /**
-     * Limpia recursos
+     * Clase para estado de backend
      */
-    public void shutdown() {
-        log.info("🛑 Cerrando servicio de descarga avanzado...");
-        executorService.shutdown();
+    public static class BackendStatus {
+        public final String name;
+        public final boolean available;
+        public final String status;
+        
+        public BackendStatus(String name, boolean available, String status) {
+            this.name = name;
+            this.available = available;
+            this.status = status;
+        }
+        
+        @Override
+        public String toString() {
+            String icon = available ? "✅" : "❌";
+            return String.format("%s %s: %s", icon, name, status);
+        }
     }
 }

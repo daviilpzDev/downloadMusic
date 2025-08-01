@@ -28,44 +28,29 @@ public enum DownloadBackend {
     /**
      * HTTP Direct - Descarga directa via HTTP
      */
-    HTTP_DIRECT("http-direct", "Descarga HTTP directa", false, false);
+    HTTP_DIRECT("http-direct", "Descarga HTTP directa", false, true);
     
-    private final String id;
+    private final String name;
     private final String description;
     private final boolean requiresExternalTool;
-    private final boolean supportsAllPlatforms;
+    private final boolean supportsSearch;
     
     /**
-     * Obtiene un backend por su ID
-     */
-    public static DownloadBackend fromId(String id) {
-        for (DownloadBackend backend : values()) {
-            if (backend.getId().equalsIgnoreCase(id)) {
-                return backend;
-            }
-        }
-        throw new IllegalArgumentException("Backend no encontrado: " + id);
-    }
-    
-    /**
-     * Verifica si el backend está disponible en el sistema
+     * Verifica si este backend está disponible en el sistema actual
      */
     public boolean isAvailable() {
-        switch (this) {
-            case YT_DLP:
-                return checkYtDlpAvailable();
-            case JTUBE:
-                return true; // Siempre disponible (biblioteca Java)
-            case PYTUBEFIX:
-                return checkPythonAvailable();
-            case HTTP_DIRECT:
-                return true; // Siempre disponible
-            default:
-                return false;
-        }
+        return switch (this) {
+            case YT_DLP -> isYtDlpAvailable();
+            case JTUBE -> true; // Siempre disponible en modo simulación
+            case PYTUBEFIX -> false; // No implementado
+            case HTTP_DIRECT -> true; // Siempre disponible
+        };
     }
     
-    private boolean checkYtDlpAvailable() {
+    /**
+     * Verifica si yt-dlp está disponible
+     */
+    private boolean isYtDlpAvailable() {
         try {
             ProcessBuilder pb = new ProcessBuilder("yt-dlp", "--version");
             Process process = pb.start();
@@ -75,13 +60,24 @@ public enum DownloadBackend {
         }
     }
     
-    private boolean checkPythonAvailable() {
-        try {
-            ProcessBuilder pb = new ProcessBuilder("python3", "-c", "import pytubefix");
-            Process process = pb.start();
-            return process.waitFor() == 0;
-        } catch (Exception e) {
-            return false;
+    /**
+     * Obtiene todos los backends disponibles
+     */
+    public static DownloadBackend[] getAvailableBackends() {
+        return java.util.Arrays.stream(values())
+                .filter(DownloadBackend::isAvailable)
+                .toArray(DownloadBackend[]::new);
+    }
+    
+    /**
+     * Obtiene el backend por defecto (el primero disponible)
+     */
+    public static DownloadBackend getDefault() {
+        for (DownloadBackend backend : values()) {
+            if (backend.isAvailable()) {
+                return backend;
+            }
         }
+        return YT_DLP; // Fallback
     }
 }

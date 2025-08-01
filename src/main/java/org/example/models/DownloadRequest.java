@@ -41,36 +41,58 @@ public class DownloadRequest {
     }
     
     /**
-     * Calidades de audio disponibles
+     * Calidades de audio
      */
     public enum AudioQuality {
-        LOW(96), 
-        MEDIUM(128), 
-        HIGH(192), 
-        ULTRA_HIGH(320);
+        LOW("128K"),
+        MEDIUM("192K"), 
+        HIGH("256K"),
+        ULTRA_HIGH("320K");
         
-        private final int bitrate;
+        private final String bitrate;
         
-        AudioQuality(int bitrate) {
+        AudioQuality(String bitrate) {
             this.bitrate = bitrate;
         }
         
-        public int getBitrate() {
+        public String getBitrate() {
             return bitrate;
         }
     }
     
     /**
-     * Obtiene el nombre de archivo final
+     * Obtiene el nombre de archivo objetivo basado en la configuración
      */
     public String getTargetFilename() {
-        if (customFilename != null && !customFilename.isEmpty()) {
-            return customFilename;
+        if (customFilename != null && !customFilename.trim().isEmpty()) {
+            // Usar nombre personalizado
+            String filename = customFilename.trim();
+            if (!filename.toLowerCase().endsWith("." + audioFormat.getExtension())) {
+                filename += "." + audioFormat.getExtension();
+            }
+            return sanitizeFilename(filename);
+        } else if (videoInfo != null) {
+            // Usar título del video
+            String title = videoInfo.getTitle();
+            if (title == null || title.trim().isEmpty()) {
+                title = "Unknown_" + System.currentTimeMillis();
+            }
+            return sanitizeFilename(title) + "." + audioFormat.getExtension();
+        } else {
+            // Fallback
+            return "download_" + System.currentTimeMillis() + "." + audioFormat.getExtension();
         }
+    }
+    
+    /**
+     * Sanitiza el nombre de archivo eliminando caracteres problemáticos
+     */
+    private String sanitizeFilename(String filename) {
+        if (filename == null) return "unknown";
         
-        String baseFilename = videoInfo.getSanitizedTitle();
-        AudioFormat format = audioFormat != null ? audioFormat : AudioFormat.MP3;
-        
-        return baseFilename + "." + format.getExtension();
+        return filename.replaceAll("[\\\\/:*?\"<>|]", "_")
+                      .replaceAll("\\s+", "_")
+                      .replaceAll("_+", "_")
+                      .trim();
     }
 }

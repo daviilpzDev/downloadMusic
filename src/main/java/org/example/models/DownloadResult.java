@@ -34,17 +34,36 @@ public class DownloadResult {
         private String originalUrl;
         private String videoTitle;
         private String videoId;
-        private Long videoDurationSeconds;
+        private String videoDescription;
+        private String channelName;
+        private String audioQuality;
         private String audioFormat;
-        private Integer audioBitrate;
-        private Long originalFileSize;
     }
     
     /**
-     * Obtiene el tamaño del archivo en formato legible
+     * Obtiene el tiempo de descarga formateado
+     */
+    public String getFormattedDownloadTime() {
+        if (downloadTimeMs == null || downloadTimeMs == 0) {
+            return "N/A";
+        }
+        
+        if (downloadTimeMs < 1000) {
+            return downloadTimeMs + "ms";
+        } else if (downloadTimeMs < 60000) {
+            return String.format("%.1fs", downloadTimeMs / 1000.0);
+        } else {
+            long minutes = downloadTimeMs / 60000;
+            long seconds = (downloadTimeMs % 60000) / 1000;
+            return String.format("%dm %ds", minutes, seconds);
+        }
+    }
+    
+    /**
+     * Obtiene el tamaño del archivo formateado
      */
     public String getFormattedFileSize() {
-        if (fileSize <= 0) return "Unknown";
+        if (fileSize <= 0) return "0 B";
         
         double size = fileSize;
         String[] units = {"B", "KB", "MB", "GB"};
@@ -59,29 +78,22 @@ public class DownloadResult {
     }
     
     /**
-     * Obtiene el tiempo de descarga en formato legible
+     * Verifica si la descarga fue exitosa
      */
-    public String getFormattedDownloadTime() {
-        if (downloadTimeMs == null || downloadTimeMs <= 0) return "Unknown";
-        
-        long seconds = downloadTimeMs / 1000;
-        long minutes = seconds / 60;
-        seconds = seconds % 60;
-        
-        if (minutes > 0) {
-            return String.format("%dm %ds", minutes, seconds);
-        } else {
-            return String.format("%ds", seconds);
-        }
+    public boolean isSuccessful() {
+        return success;
     }
     
     /**
-     * Verifica si la descarga fue exitosa y el archivo existe
+     * Obtiene un resumen textual del resultado
      */
-    public boolean isValid() {
-        return success && 
-               filePath != null && 
-               !filePath.isEmpty() && 
-               new java.io.File(filePath).exists();
+    public String getSummary() {
+        if (success) {
+            return String.format("✅ Descarga exitosa: %s (%s) en %s", 
+                    fileName, getFormattedFileSize(), getFormattedDownloadTime());
+        } else {
+            return String.format("❌ Descarga fallida: %s", 
+                    errorMessage != null ? errorMessage : "Error desconocido");
+        }
     }
 }

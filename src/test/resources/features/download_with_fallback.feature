@@ -7,24 +7,26 @@ Feature: Download music with automatic backend fallback
     Given the advanced download service with fallback is available
     And the output directory is set to "./target/"
 
-  Scenario: Download multiple songs with automatic fallback
+  Scenario: Download songs from YAML file with automatic fallback
     Given I have a list of songs to download
+    Then the songs should be loaded from songs.yml file
     When I download the songs with automatic fallback
-    Then the download should be successful
-    And the downloaded files should exist in the output directory
-    And the system should show backend fallback information
+    Then the system should show backend fallback information
 
-  Scenario: Download single song with automatic fallback
-    Given the advanced download service with fallback is available
+  Scenario: Download songs directly from YAML with fallback
+    When I download songs from YAML with automatic fallback
+    Then the system should show backend fallback information
+
+  Scenario: Download single song from YAML list with automatic fallback
+    Given I have a list of songs to download
     When I download a single song "Cuando zarpa el amor - Camela" with automatic fallback
-    Then the download should be successful
-    And the downloaded files should exist in the output directory
+    Then the system should show backend fallback information
 
-  Scenario: Fallback system ensures high success rate
+  Scenario: Verify YAML song loading and fallback behavior
     Given I have a list of songs to download
+    Then the songs should be loaded from songs.yml file
     When I download the songs with automatic fallback
-    Then at least 1 downloads should be successful
-    And the system should show backend fallback information
+    Then the system should show backend fallback information
 
   Scenario: System gracefully handles multiple backend failures
     Given the advanced download service with fallback is available

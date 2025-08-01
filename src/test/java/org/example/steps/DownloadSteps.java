@@ -7,18 +7,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.models.DownloadResult;
 import org.example.services.AdvancedDownloadService;
 import org.example.services.AdvancedDownloadService.BackendStatus;
+import org.example.utils.Actions;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Steps de Cucumber para las pruebas de descarga con fallback automático
+ * Utiliza las canciones definidas en songs.yml
  */
 @Slf4j
 public class DownloadSteps {
@@ -31,16 +32,23 @@ public class DownloadSteps {
 
     @Given("I have a list of songs to download")
     public void i_have_a_list_of_songs_to_download() {
-        log.info("🎵 Preparando lista de canciones para descarga con fallback automático");
+        log.info("🎵 Cargando lista de canciones desde songs.yml");
         
-        songsToDownload = new ArrayList<>();
-        songsToDownload.add("Cuando zarpa el amor - Camela");
-        songsToDownload.add("Despacito - Luis Fonsi");
-        songsToDownload.add("Shape of You - Ed Sheeran");
-        
-        log.info("📋 Lista preparada con {} canciones", songsToDownload.size());
-        for (int i = 0; i < songsToDownload.size(); i++) {
-            log.info("   {}. {}", i + 1, songsToDownload.get(i));
+        try {
+            // Cargar canciones desde el archivo YAML usando la utilidad existente
+            songsToDownload = Actions.getYmlFile("songs");
+            
+            log.info("📋 Lista cargada con {} canciones desde songs.yml:", songsToDownload.size());
+            for (int i = 0; i < songsToDownload.size(); i++) {
+                log.info("   {}. {}", i + 1, songsToDownload.get(i));
+            }
+            
+            assertNotNull(songsToDownload, "La lista de canciones no debe ser nula");
+            assertFalse(songsToDownload.isEmpty(), "La lista de canciones no debe estar vacía");
+            
+        } catch (Exception e) {
+            log.error("❌ Error cargando canciones desde songs.yml: {}", e.getMessage());
+            fail("Error cargando canciones desde songs.yml: " + e.getMessage());
         }
     }
 
@@ -82,7 +90,8 @@ public class DownloadSteps {
 
     @When("I download the songs with automatic fallback")
     public void i_download_the_songs_with_automatic_fallback() {
-        log.info("🔄 Iniciando descarga con fallback automático para {} canciones", songsToDownload.size());
+        log.info("🔄 Iniciando descarga con fallback automático para {} canciones desde songs.yml", 
+                songsToDownload != null ? songsToDownload.size() : 0);
         
         assertNotNull(downloadService, "El servicio de descarga debe estar inicializado");
         assertNotNull(songsToDownload, "La lista de canciones no debe ser nula");
@@ -125,8 +134,7 @@ public class DownloadSteps {
         try {
             DownloadResult result = downloadService.searchAndDownload(songName, targetPath);
             
-            downloadResults = new ArrayList<>();
-            downloadResults.add(result);
+            downloadResults = List.of(result);
             
             if (result.isSuccess()) {
                 log.info("✅ Descarga exitosa: {} ({})", 
@@ -139,6 +147,19 @@ public class DownloadSteps {
             log.error("❌ Error durante la descarga: {}", e.getMessage());
             fail("Error durante la descarga: " + e.getMessage());
         }
+    }
+
+    @When("I download songs from YAML with automatic fallback")
+    public void i_download_songs_from_yaml_with_automatic_fallback() {
+        log.info("🎵 Descargando canciones desde songs.yml con fallback automático");
+        
+        // Primero cargar las canciones si no están ya cargadas
+        if (songsToDownload == null) {
+            i_have_a_list_of_songs_to_download();
+        }
+        
+        // Luego proceder con la descarga
+        i_download_the_songs_with_automatic_fallback();
     }
 
     @Then("the download should be successful")
@@ -252,5 +273,24 @@ public class DownloadSteps {
         
         log.info("✅ Verificación completada: {}/{} descargas exitosas (mínimo requerido: {})", 
                 successfulDownloads, downloadResults.size(), minSuccessful);
+    }
+
+    @Then("the songs should be loaded from songs.yml file")
+    public void the_songs_should_be_loaded_from_songs_yml_file() {
+        log.info("🔍 Verificando que las canciones se cargaron desde songs.yml");
+        
+        assertNotNull(songsToDownload, "La lista de canciones no debe ser nula");
+        assertFalse(songsToDownload.isEmpty(), "La lista de canciones no debe estar vacía");
+        
+        // Verificar que las canciones contienen el formato "Canción - Artista"
+        for (String song : songsToDownload) {
+            assertNotNull(song, "Cada canción debe tener un valor");
+            assertFalse(song.trim().isEmpty(), "Cada canción debe tener contenido");
+            assertTrue(song.contains(" - "), 
+                    String.format("La canción '%s' debe tener formato 'Título - Artista'", song));
+        }
+        
+        log.info("✅ {} canciones verificadas desde songs.yml:", songsToDownload.size());
+        songsToDownload.forEach(song -> log.info("   • {}", song));
     }
 }

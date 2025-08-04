@@ -35,8 +35,16 @@ COPY --from=build /app /app
 # Definir variable de entorno para descargas
 ENV DOWNLOAD_PATH="/target"
 
-# Configurar Maven para evitar problemas de memoria
-ENV MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=128m"
+# Configurar variables de entorno para logging en tiempo real
+ENV PYTHONUNBUFFERED=1
+ENV JAVA_OPTS="-Dlogback.configurationFile=/app/src/test/resources/logback-test.xml"
 
-# Ejecutar pruebas de Cucumber con Maven con timeout
-CMD ["timeout", "300", "mvn", "test", "-Dtest=RunCucumberTest"]
+# Crear script para ejecutar con salida no bufferizada
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Iniciando tests con salida no bufferizada..."\n\
+timeout 300 mvn test -Dtest=RunCucumberTest -Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.showThreadName=true -Dorg.slf4j.simpleLogger.showLogName=true -Dorg.slf4j.simpleLogger.showShortLogName=true -Dorg.slf4j.simpleLogger.logFile=System.out\n\
+' > /app/run-tests.sh && chmod +x /app/run-tests.sh
+
+# Ejecutar con script que fuerza salida no bufferizada
+CMD ["/app/run-tests.sh"]

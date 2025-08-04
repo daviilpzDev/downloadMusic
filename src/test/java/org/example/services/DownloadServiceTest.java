@@ -1,18 +1,10 @@
 package org.example.services;
 
-import org.example.utils.Constants;
 import org.example.utils.Globals;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DownloadServiceTest {
@@ -22,7 +14,7 @@ class DownloadServiceTest {
     @BeforeEach
     void setUp() {
         downloadService = new DownloadService();
-        Globals.list.clear(); // Limpiar lista antes de cada test
+        Globals.list.clear();
     }
 
     /*

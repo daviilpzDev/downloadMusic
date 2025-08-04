@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- Forzar flush inmediato para contenedores -->
+        <immediateFlush>true</immediateFlush>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <!-- Forzar flush después de cada línea -->
+            <immediateFlush>true</immediateFlush>
         </encoder>
     </appender>
 
@@ -17,14 +21,21 @@
         </encoder>
     </appender>
 
+    <!-- Configuración para forzar salida inmediata -->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="STDOUT"/>
+        <queueSize>0</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
+
     <root level="INFO">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNC" />
         <appender-ref ref="FILE" />
     </root>
 
     <!-- Configuración específica para el paquete org.example -->
     <logger name="org.example" level="DEBUG" additivity="false">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNC" />
         <appender-ref ref="FILE" />
     </logger>
 </configuration> 

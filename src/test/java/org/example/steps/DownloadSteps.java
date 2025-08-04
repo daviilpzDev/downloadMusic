@@ -1,7 +1,7 @@
 package org.example.steps;
 
 import io.cucumber.java.en.*;
-import org.example.Methods;
+import org.example.DefinitionSteps;
 import org.example.utils.Actions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +26,11 @@ public class DownloadSteps {
 
     @When("I search for the songs and get their URLs")
     public void i_search_for_the_songs_and_get_their_urls() {
-        Methods.searchSongAndGetTheUrl();
+        DefinitionSteps.searchSongAndGetTheUrl();
     }
 
     @Then("I download the songs as MP3 files")
     public void i_download_the_songs_as_mp3_files() {
-        Methods.downloadSongAction();
+        DefinitionSteps.downloadSongAction();
     }
 }

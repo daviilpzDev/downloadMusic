@@ -9,11 +9,14 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 public class DownloadService {
     private static final Logger logger = Constants.logger;
+    private Set<String> downloadedFiles = new HashSet<>();
 
     public void searchSongsAndGetUrls(List<String> songs) {
         if (songs == null || songs.isEmpty()) {
@@ -22,6 +25,9 @@ public class DownloadService {
         }
 
         List<String> urls = Globals.list;
+        Set<String> uniqueUrls = new HashSet<>();
+        int duplicatesDetected = 0;
+        
         logger.info("=== INICIANDO BÚSQUEDA DE URLs ===");
         logger.info("Total de canciones a procesar: {}", songs.size());
 
@@ -49,9 +55,18 @@ public class DownloadService {
 
                 if (videoId != null && !videoId.isEmpty()) {
                     String fullUrl = "https://www.youtube.com/watch?v=" + videoId;
-                    urls.add(fullUrl);
-                    logger.info("✅ URL encontrada para '{}': {}", song, fullUrl);
-                    System.out.println("✅ Found URL for song: " + song + " - " + fullUrl);
+                    
+                    // Verificar si la URL ya existe
+                    if (uniqueUrls.contains(fullUrl)) {
+                        duplicatesDetected++;
+                        logger.warn(Constants.LOG_DUPLICATE_URL_DURING_SEARCH, fullUrl, song);
+                        logger.info("🔄 Saltando URL duplicada para evitar conflictos");
+                    } else {
+                        uniqueUrls.add(fullUrl);
+                        urls.add(fullUrl);
+                        logger.info("✅ URL encontrada para '{}': {}", song, fullUrl);
+                        System.out.println("✅ Found URL for song: " + song + " - " + fullUrl);
+                    }
                 } else {
                     logger.warn("❌ No se encontró URL para: {}", song);
                 }
@@ -62,8 +77,12 @@ public class DownloadService {
             }
         }
 
+        if (duplicatesDetected > 0) {
+            logger.info(Constants.LOG_SEARCH_DUPLICATES_SUMMARY, duplicatesDetected);
+        }
+
         logger.info("=== BÚSQUEDA COMPLETADA ===");
-        logger.info("URLs encontradas: {}/{}", urls.size(), songs.size());
+        logger.info("URLs únicas encontradas: {}/{}", urls.size(), songs.size());
     }
 
     public void downloadSongs(List<String> urls, List<String> songs) {
@@ -77,25 +96,21 @@ public class DownloadService {
             return;
         }
 
-        if (urls.size() != songs.size()) {
-            logger.error(Constants.LOG_DIFFERENT_SIZES);
-            return;
-        }
-
         logger.info("=== INICIANDO DESCARGA DE CANCIONES ===");
-        logger.info("Total de canciones a descargar: {}", songs.size());
+        logger.info("Total de canciones originales: {}", songs.size());
+        logger.info("Total de URLs originales: {}", urls.size());
 
         Map<String, String> urlToSongMap = buildUrlToSongMap(urls, songs);
+        
+        // Usar solo las URLs únicas del mapa
+        List<String> uniqueUrls = new ArrayList<>(urlToSongMap.keySet());
+        logger.info("Total de URLs únicas a descargar: {}", uniqueUrls.size());
 
-        for (int i = 0; i < urls.size(); i++) {
-            String url = urls.get(i);
-            if (url == null || url.trim().isEmpty()) {
-                logger.warn("URL nula o vacía, saltando...");
-                continue;
-            }
-
-            String songNameRaw = urlToSongMap.getOrDefault(url, "Unknown");
-            logger.info("🎵 Descargando canción {}/{}: '{}'", i + 1, urls.size(), songNameRaw);
+        for (int i = 0; i < uniqueUrls.size(); i++) {
+            String url = uniqueUrls.get(i);
+            String songNameRaw = urlToSongMap.get(url);
+            
+            logger.info("🎵 Descargando canción {}/{}: '{}'", i + 1, uniqueUrls.size(), songNameRaw);
 
             try {
                 downloadSingleSong(url, songNameRaw);
@@ -129,10 +144,27 @@ public class DownloadService {
         int exitCode = process.waitFor();
         if (exitCode == 0 && downloadedFilename != null) {
             logger.info("🎵 ¡Descarga completada exitosamente!");
-            renameDownloadedFile(downloadedFilename, songNameRaw);
+            handleDuplicateFile(downloadedFilename, songNameRaw);
         } else {
             logger.error("❌ No se detectó el archivo descargado para: {}", songNameRaw);
         }
+    }
+
+    private void handleDuplicateFile(String downloadedFilename, String songNameRaw) {
+        File downloadedFile = new File(downloadedFilename);
+        String fileName = downloadedFile.getName();
+        
+        // Verificar si el archivo ya existe en el sistema
+        File existingFile = new File(Constants.DOWNLOAD_PATH + fileName);
+        
+        if (existingFile.exists() && !downloadedFiles.contains(fileName)) {
+            logger.warn(Constants.LOG_DUPLICATE_FILE_DETECTED, fileName);
+            logger.info(Constants.LOG_DUPLICATE_FILE_KEPT, fileName);
+            logger.info(Constants.LOG_DUPLICATE_FILE_OVERWRITTEN);
+        }
+        
+        // Agregar a la lista de archivos descargados en esta sesión
+        downloadedFiles.add(fileName);
     }
 
     private String processDownloadOutput(Process process) throws Exception {
@@ -143,9 +175,26 @@ public class DownloadService {
         while ((line = reader.readLine()) != null) {
             logger.info(line);
 
+            // Detectar archivo descargado desde la línea de destino
             if (line.toLowerCase().contains("[extractaudio] destination:")) {
                 int index = line.toLowerCase().indexOf("destination:") + "destination:".length();
                 downloadedFilename = line.substring(index).trim();
+            }
+            // Detectar cuando el archivo ya existe y no se convierte
+            else if (line.toLowerCase().contains("not converting audio") && line.toLowerCase().contains(".mp3")) {
+                int startIndex = line.indexOf("/");
+                int endIndex = line.indexOf(".mp3") + 4;
+                if (startIndex != -1 && endIndex != -1) {
+                    downloadedFilename = line.substring(startIndex, endIndex);
+                }
+            }
+            // Detectar archivo que ya ha sido descargado
+            else if (line.toLowerCase().contains("has already been downloaded") && line.toLowerCase().contains(".mp3")) {
+                int startIndex = line.indexOf("/");
+                int endIndex = line.indexOf(".mp3") + 4;
+                if (startIndex != -1 && endIndex != -1) {
+                    downloadedFilename = line.substring(startIndex, endIndex);
+                }
             }
         }
         return downloadedFilename;
@@ -159,27 +208,32 @@ public class DownloadService {
         }
     }
 
-    private void renameDownloadedFile(String downloadedFilename, String songNameRaw) {
-        File originalFile = new File(downloadedFilename);
-        String sanitizedTargetName = sanitizeFilename(songNameRaw) + Constants.MP3_EXTENSION;
-        File renamedFile = new File(Constants.DOWNLOAD_PATH + sanitizedTargetName);
-
-        logger.info("🔄 Renombrando archivo: '{}' → '{}'", originalFile.getName(), renamedFile.getName());
-
-        if (originalFile.renameTo(renamedFile)) {
-            logger.info("✅ Archivo renombrado exitosamente: {}", renamedFile.getName());
-        } else {
-            logger.warn("⚠️ No se pudo renombrar el archivo: {}", originalFile.getName());
-        }
-    }
-
     private Map<String, String> buildUrlToSongMap(List<String> urls, List<String> songs) {
-        return IntStream.range(0, songs.size())
-                .boxed()
-                .collect(Collectors.toMap(urls::get, songs::get));
-    }
-
-    private String sanitizeFilename(String name) {
-        return name.replaceAll("[\\\\/:*?\"<>|]", "").trim();
+        Map<String, String> urlToSongMap = new HashMap<>();
+        int duplicatesDetected = 0;
+        
+        for (int i = 0; i < urls.size() && i < songs.size(); i++) {
+            String url = urls.get(i);
+            String song = songs.get(i);
+            
+            if (url != null && !url.trim().isEmpty()) {
+                if (urlToSongMap.containsKey(url)) {
+                    duplicatesDetected++;
+                    logger.warn(Constants.LOG_DUPLICATE_URL_DETECTED, url, urlToSongMap.get(url), song);
+                    logger.info("🔄 Manteniendo la primera canción y rechazando la duplicada");
+                    // Mantener la primera canción asociada a esta URL
+                    continue;
+                }
+                urlToSongMap.put(url, song);
+                logger.debug("🔗 Mapeado URL: {} → '{}'", url, song);
+            }
+        }
+        
+        if (duplicatesDetected > 0) {
+            logger.info(Constants.LOG_DUPLICATES_SUMMARY, duplicatesDetected);
+        }
+        
+        logger.info("📊 Mapa URL→Canción creado con {} entradas únicas", urlToSongMap.size());
+        return urlToSongMap;
     }
 } 

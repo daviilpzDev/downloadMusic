@@ -5,11 +5,23 @@ services:
     environment:
       - DOWNLOAD_PATH=/target/
       - YML_PATH=/app/data
+      - PYTHONUNBUFFERED=1
+      - JAVA_OPTS=-Dlogback.configurationFile=/app/src/test/resources/logback-test.xml
+      - MAVEN_OPTS=-Xmx512m -XX:MaxPermSize=128m
     volumes:
       - /mnt/storage/media/music/:/target/
       - /home/lpzserv/downloadMusic/src/test/resources/data/songs.yml:/app/data/songs.yml:ro
     networks:
       - downloader-network
+    # Configurar para mostrar logs en tiempo real
+    tty: true
+    stdin_open: true
+    # Configurar para seguir logs automáticamente
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   downloader-network:

@@ -39,9 +39,10 @@ src/
 
 - **Búsqueda automática**: Busca URLs de YouTube para canciones especificadas
 - **Descarga de audio**: Descarga y convierte videos a formato MP3
-- **Renombrado automático**: Renombra archivos según el nombre de la canción
+- **Gestión de duplicados**: Detecta y maneja URLs y archivos duplicados automáticamente
 - **Logging detallado**: Registro completo de todas las operaciones
 - **Manejo de errores**: Gestión robusta de excepciones
+- **Logs en tiempo real**: Visualización inmediata de logs en contenedores
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -60,6 +61,7 @@ src/
 - Maven 3.6+
 - yt-dlp instalado
 - ffmpeg instalado
+- Docker (para ejecución en contenedor)
 
 ## 🔧 Instalación
 
@@ -94,6 +96,76 @@ src/
    docker run -v /path/to/downloads:/target downloadmusic:latest
    ```
 
+## 🐳 Ejecutar en Contenedor con Logs en Tiempo Real
+
+### 🚀 Opción 1: Script Automático (Recomendado)
+
+```bash
+# Ejecutar el script que construye y ejecuta automáticamente
+./run-container-realtime.sh
+```
+
+### 🚀 Opción 2: Pasos Manuales
+
+#### 1. Construir la imagen Docker:
+```bash
+docker build -t downloadmusic:latest .
+```
+
+#### 2. Ejecutar el contenedor con logs en tiempo real:
+```bash
+docker run --rm -it \
+  --name music-downloader \
+  -e DOWNLOAD_PATH=/target/ \
+  -e YML_PATH=/app/data \
+  -e PYTHONUNBUFFERED=1 \
+  -e JAVA_OPTS="-Dlogback.configurationFile=/app/src/test/resources/logback-test.xml" \
+  -v /mnt/storage/media/music/:/target/ \
+  -v /home/lpzserv/downloadMusic/src/test/resources/data/songs.yml:/app/data/songs.yml:ro \
+  downloadmusic:latest
+```
+
+### 🚀 Opción 3: Usar docker-compose
+
+```bash
+# Ejecutar con docker-compose
+docker-compose up --build
+```
+
+### 🚀 Opción 4: Comando Simple para Pruebas
+
+```bash
+# Construir la imagen
+docker build -t downloadmusic:latest .
+
+# Ejecutar (esto usará las rutas por defecto)
+docker run --rm -it downloadmusic:latest
+```
+
+## ⚙️ Configuración de Rutas
+
+### Verificar rutas en tu sistema:
+```bash
+# Verificar si existe el directorio de música
+ls -la /mnt/storage/media/music/
+
+# Verificar si existe el archivo de canciones
+ls -la /home/lpzserv/downloadMusic/src/test/resources/data/songs.yml
+```
+
+### Ajustar rutas según tu sistema:
+```bash
+docker run --rm -it \
+  --name music-downloader \
+  -e DOWNLOAD_PATH=/target/ \
+  -e YML_PATH=/app/data \
+  -e PYTHONUNBUFFERED=1 \
+  -e JAVA_OPTS="-Dlogback.configurationFile=/app/src/test/resources/logback-test.xml" \
+  -v /tu/ruta/local/music/:/target/ \
+  -v /tu/ruta/local/songs.yml:/app/data/songs.yml:ro \
+  downloadmusic:latest
+```
+
 ## 🧪 Ejecutar Pruebas
 
 ### Ejecutar todas las pruebas
@@ -118,6 +190,8 @@ songs:
 ### Variables de entorno
 - `DOWNLOAD_PATH`: Ruta donde se guardarán las descargas
 - `YML_PATH`: Ruta donde se encuentra el archivo songs.yml
+- `PYTHONUNBUFFERED`: Para logs en tiempo real de Python
+- `JAVA_OPTS`: Configuración de logging de Java
 
 ## 🔍 Troubleshooting
 
@@ -141,6 +215,22 @@ songs:
 4. **Problemas de memoria en Docker**:
    ```bash
    docker run --memory=1g downloadmusic:latest
+   ```
+
+5. **Logs no aparecen en tiempo real**:
+   ```bash
+   # Verificar que el script es ejecutable
+   chmod +x run-container-realtime.sh
+   
+   # Ejecutar con docker run directamente
+   ./run-docker-realtime.sh
+   ```
+
+6. **Rutas de volumen no encontradas**:
+   ```bash
+   # Crear directorios si no existen
+   mkdir -p /mnt/storage/media/music/
+   mkdir -p /home/lpzserv/downloadMusic/src/test/resources/data/
    ```
 
 ## 📄 Licencia

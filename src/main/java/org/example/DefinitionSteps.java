@@ -2,14 +2,11 @@ package org.example;
 
 import org.example.services.DownloadService;
 import org.example.utils.Actions;
-import org.example.utils.Constants;
 import org.example.utils.Globals;
-import org.slf4j.Logger;
 
 import java.util.List;
 
-public class Methods {
-    private static final Logger logger = Constants.logger;
+public class DefinitionSteps {
     private static final DownloadService downloadService = new DownloadService();
 
     public static void searchSongAndGetTheUrl() {

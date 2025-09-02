@@ -1,15 +1,27 @@
 services:
-  downloadmusic:
-    image: downloadmusic:latest
-    container_name: music-downloader
+  youtube-watcher:
+    build:
+      context: .
+      args:
+        YT_DLP_VERSION: ${YT_DLP_VERSION:-2025.03.31}
+    container_name: youtube-playlist-watcher
+    # Ejecutar como el usuario del host para evitar problemas de permisos en el volumen
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
-      - DOWNLOAD_PATH=/target/
-      - YML_PATH=/app/data
+      - PLAYLIST_URL=${PLAYLIST_URL}
+      - DOWNLOAD_PATH=${DOWNLOAD_PATH:-/downloads}
+      - OBSERVER_INTERVAL_MS=${OBSERVER_INTERVAL_MS:-60000}
+      # - COOKIES_FILE=${COOKIES_FILE}
     volumes:
-      - /mnt/storage/media/music/:/target/
-      - /home/lpzserv/downloadMusic/src/test/resources/data/songs.yml:/app/data/songs.yml:ro
+      - ${HOST_DOWNLOAD_PATH:-./downloads}:/downloads
     networks:
       - downloader-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "yt-dlp --version >/dev/null 2>&1 && ffmpeg -version >/dev/null 2>&1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
 networks:
   downloader-network:

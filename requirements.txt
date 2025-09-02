@@ -1,0 +1,13 @@
+# Dependencias para YouTube Playlist Watcher
+# Audio processing
+mutagen>=1.47.0
+
+# Image processing
+Pillow>=10.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Herramientas externas requeridas (instalar por separado):
+# - yt-dlp: https://github.com/yt-dlp/yt-dlp
+# - ffmpeg: https://ffmpeg.org/download.html

@@ -204,6 +204,55 @@ sudo apt install yt-dlp ffmpeg
 # Descargar desde https://github.com/yt-dlp/yt-dlp y https://ffmpeg.org/
 ```
 
+## 🧩 Versionado y Releases
+
+Este proyecto usa versionado SemVer derivado de tags de Git mediante `setuptools_scm` y un workflow de GitHub Actions para empaquetado y publicación.
+
+- Formato de tag: `vX.Y.Z` (por ejemplo: `v3.0.1`).
+- La versión del paquete se obtiene del tag en el momento del build (no se fija manualmente en el código).
+- La release en GitHub se crea automáticamente al pushear un tag válido y adjunta artefactos del paquete (`sdist` y `wheel`).
+- Opcional: publicación de imagen Docker a Docker Hub si configuras secretos.
+
+### Crear una release
+
+1) Confirma que la rama está limpia y en `main` (o la rama correspondiente).
+
+2) Crea commit (opcional) y tag de la versión:
+```bash
+git add -A && git commit -m "chore(release): v3.0.2"   # opcional si hubo cambios
+git tag -a v3.0.2 -m "Release v3.0.2"
+git push && git push --tags
+```
+
+3) GitHub Actions ejecuta el workflow de release:
+- Construye el paquete Python (`dist/*.whl`, `dist/*.tar.gz`).
+- Verifica que la versión del paquete coincide con el tag.
+- Crea la GitHub Release y adjunta artefactos.
+- Si has configurado Docker Hub, construye y publica la imagen con tags `v3.0.2` y `latest`.
+
+### Configurar publicación de imagen Docker (opcional)
+
+En GitHub, ve a Settings → Secrets and variables → Actions y añade:
+- Secrets:
+  - `DOCKERHUB_USERNAME`: tu usuario de Docker Hub
+  - `DOCKERHUB_TOKEN`: token o password de Docker Hub
+- Variables (opcional):
+  - `YT_DLP_VERSION`: versión de `yt-dlp` a usar en el build (ej. `2024.08.06`).
+
+### Consumir una versión específica
+
+- Docker Compose / Portainer: usa una imagen fija, por ejemplo `youruser/youtube-watcher:v3.0.2`.
+- Python: instala desde el artefacto adjunto a la release o desde PyPI si publicas allí.
+
+### Consultar la versión en tiempo de ejecución
+
+```python
+from importlib.metadata import version
+print(version("youtube-playlist-watcher"))
+```
+
+Consulta también el historial de cambios en `CHANGELOG.md` para ver qué se incluyó en cada versión y las reglas de cuándo incrementar `MAJOR.MINOR.PATCH` (SemVer).
+
 ### Playlists Privadas / Restricciones
 
 Si tu playlist requiere autenticación o acceso regional:

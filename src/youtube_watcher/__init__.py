@@ -5,6 +5,12 @@ Un watcher automático para descargar nuevas canciones de playlists de YouTube
 en formato FLAC con metadatos y portada.
 """
 
-__version__ = "3.0.1"
+try:
+    from importlib.metadata import version, PackageNotFoundError
+
+    __version__ = version("youtube-playlist-watcher")
+except Exception:
+    # En entorno de desarrollo sin instalar el paquete
+    __version__ = "0+unknown"
 __author__ = "David Lopez"
 __description__ = "YouTube Playlist Watcher - Descarga automática a FLAC"

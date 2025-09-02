@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm>=7"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "youtube-playlist-watcher"
-version = "3.0.1"
+dynamic = ["version"]
 description = "YouTube Playlist Watcher - Descarga automática a FLAC"
 readme = "README.md"
 license = {text = "MIT"}
@@ -60,6 +60,12 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[tool.setuptools_scm]
+# Deriva versiones desde tags Git (p. ej. v3.0.1)
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"
+tag_regex = "^(?:v)?(?P<version>\d+\.\d+\.\d+)$"
 
 [tool.flake8]
 max-line-length = 88

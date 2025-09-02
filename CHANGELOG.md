@@ -17,6 +17,11 @@ Unreleased
 - Changed:
 - Fixed:
 
+3.0.5 - 2025-09-02
+- Fixed: `PlaylistMonitor.get_playlist_videos()` soporta stdout con JSON de video único (compat con tests y casos edge).
+- Fixed: CI fallos por parser — tolerancia de formatos de salida (`-J --flat-playlist`) y fallback por líneas.
+- Docs: aclaraciones de pruebas locales (Docker/Compose) y uso de intervalos en ms.
+
 3.0.4 - 2025-09-02
 - Added: Publicación de imagen en GitHub Container Registry (GHCR) en el workflow de Release.
 - Changed: CI con matriz de Python 3.11 y 3.12 y checkout con `fetch-depth: 0`.

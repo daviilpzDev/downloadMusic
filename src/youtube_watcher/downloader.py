@@ -66,7 +66,9 @@ class YouTubeDownloader:
                             break
             if not thumbnail_url and video_data.get("id"):
                 # Fallback estable de YouTube
-                thumbnail_url = f"https://i.ytimg.com/vi/{video_data['id']}/hqdefault.jpg"
+                thumbnail_url = (
+                    f"https://i.ytimg.com/vi/{video_data['id']}/hqdefault.jpg"
+                )
 
         logger.debug(
             "Thumbnail URL resolved for '%s': %s", title, thumbnail_url or "<none>"

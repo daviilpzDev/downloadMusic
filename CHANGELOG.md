@@ -17,6 +17,9 @@ Unreleased
 - Changed:
 - Fixed:
 
+3.0.7 - 2025-09-02
+- Fixed: Cumplimiento flake8 E501 (línea larga) en `downloader.py` al envolver la URL de fallback de thumbnail; CI verde de nuevo.
+
 3.0.6 - 2025-09-02
 - Fixed: Portadas embebidas de forma robusta aunque `yt-dlp` no entregue `thumbnail` plano; ahora se resuelve desde `thumbnails` y, si falta, se usa fallback `i.ytimg.com/…/hqdefault.jpg`.
 - Fixed: Soporte de portadas servidas como WEBP convirtiéndolas a JPEG antes de incrustar (Mutagen/FLAC).

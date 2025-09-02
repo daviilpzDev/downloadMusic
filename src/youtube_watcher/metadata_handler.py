@@ -43,6 +43,7 @@ class MetadataHandler:
             thumbnail_url: URL de la portada
         """
         try:
+            logger.debug("Abriendo FLAC para metadatos: %s", flac_path)
             audio = FLAC(flac_path)
 
             # Metadatos básicos
@@ -61,9 +62,16 @@ class MetadataHandler:
                 except Exception:
                     pass
                 self._add_cover(audio, thumbnail_url, title)
+            else:
+                logger.debug("Sin thumbnail URL para '%s'; se omite portada", title)
 
             # Guardar cambios
             audio.save()
+            try:
+                pics = getattr(audio, "pictures", [])
+                logger.debug("FLAC '%s' guardar ok; pictures=%s", title, len(pics))
+            except Exception:
+                logger.debug("FLAC '%s' guardado; no se pudo leer pictures", title)
             logger.info(f"Metadatos guardados para '{title}'")
 
         except Exception as e:
@@ -79,11 +87,26 @@ class MetadataHandler:
             title: Título de la canción
         """
         try:
-            logger.info(f"Descargando portada para '{title}'...")
+            logger.info("Descargando portada para '%s'...", title)
 
-            # Descargar imagen
-            response = requests.get(thumbnail_url, timeout=10)
+            # Descargar imagen (con User-Agent para evitar bloqueos de CDN)
+            headers = {
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+                )
+            }
+            response = requests.get(thumbnail_url, timeout=10, headers=headers)
             response.raise_for_status()
+            ctype = response.headers.get("Content-Type")
+            clen = response.headers.get("Content-Length")
+            logger.debug(
+                "Thumbnail HTTP ok para '%s': status=%s, type=%s, length=%s",
+                title,
+                response.status_code,
+                ctype,
+                clen,
+            )
 
             # Procesar imagen
             img_data = self._process_image(response.content)
@@ -98,12 +121,12 @@ class MetadataHandler:
 
             # Añadir portada
             audio.add_picture(picture)
-            logger.info(f"Portada añadida para '{title}'")
+            logger.info("Portada añadida para '%s'", title)
 
         except requests.exceptions.RequestException as e:
-            logger.warning(f"Error al descargar la portada para '{title}': {e}")
+            logger.warning("Error al descargar la portada para '%s': %s", title, e)
         except Exception as e:
-            logger.warning(f"Error al procesar la portada para '{title}': {e}")
+            logger.warning("Error al procesar la portada para '%s': %s", title, e)
 
     def _process_image(self, image_content: bytes) -> Optional[bytes]:
         """
@@ -118,13 +141,23 @@ class MetadataHandler:
         try:
             # Abrir imagen
             img = Image.open(BytesIO(image_content))
+            orig_w, orig_h = img.size
 
             # Redimensionar manteniendo proporción
             img.thumbnail((1000, 1000), Image.LANCZOS)
+            new_w, new_h = img.size
 
             # Convertir a bytes JPEG
             img_bytes = BytesIO()
             img.save(img_bytes, format="JPEG", quality=95)
+            logger.debug(
+                "Imagen portada procesada: %sx%s -> %sx%s, bytes=%s",
+                orig_w,
+                orig_h,
+                new_w,
+                new_h,
+                img_bytes.tell(),
+            )
 
             return img_bytes.getvalue()
 

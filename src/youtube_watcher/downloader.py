@@ -47,7 +47,30 @@ class YouTubeDownloader:
         album = video_data.get("album", f"YouTube - {artist}")
         upload_date = video_data.get("upload_date")
         year = upload_date[:4] if upload_date and len(upload_date) >= 4 else None
+        # Resolver URL de portada
         thumbnail_url = video_data.get("thumbnail")
+        if not thumbnail_url:
+            thumbs = video_data.get("thumbnails")
+            if isinstance(thumbs, list) and thumbs:
+                try:
+                    best = max(
+                        (t for t in thumbs if isinstance(t, dict) and t.get("url")),
+                        key=lambda t: t.get("width", 0) or 0,
+                    )
+                    thumbnail_url = best.get("url")
+                except Exception:
+                    # Último recurso: tomar el último elemento
+                    for t in reversed(thumbs):
+                        if isinstance(t, dict) and t.get("url"):
+                            thumbnail_url = t.get("url")
+                            break
+            if not thumbnail_url and video_data.get("id"):
+                # Fallback estable de YouTube
+                thumbnail_url = f"https://i.ytimg.com/vi/{video_data['id']}/hqdefault.jpg"
+
+        logger.debug(
+            "Thumbnail URL resolved for '%s': %s", title, thumbnail_url or "<none>"
+        )
 
         # Sanitizar nombres
         safe_title = self._sanitize_filename(title)

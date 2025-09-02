@@ -65,7 +65,7 @@ disallow_untyped_defs = true
 # Deriva versiones desde tags Git (p. ej. v3.0.1)
 version_scheme = "guess-next-dev"
 local_scheme = "node-and-date"
-tag_regex = "^(?:v)?(?P<version>\d+\.\d+\.\d+)$"
+tag_regex = '^(?:v)?(?P<version>\d+\.\d+\.\d+)$'
 
 [tool.flake8]
 max-line-length = 88
@@ -77,3 +77,4 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --cov=src --cov-report=term-missing"
+

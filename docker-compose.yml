@@ -1,8 +1,9 @@
-version: '3.8'
-
 services:
   youtube-watcher:
-    build: .
+    build:
+      context: .
+      args:
+        YT_DLP_VERSION: ${YT_DLP_VERSION:-2025.03.31}
     container_name: youtube-playlist-watcher
     # Ejecutar como el usuario del host para evitar problemas de permisos en el volumen
     user: "${UID:-1000}:${GID:-1000}"
@@ -10,6 +11,7 @@ services:
       - PLAYLIST_URL=${PLAYLIST_URL}
       - DOWNLOAD_PATH=${DOWNLOAD_PATH:-/downloads}
       - OBSERVER_INTERVAL_MS=${OBSERVER_INTERVAL_MS:-60000}
+      # - COOKIES_FILE=${COOKIES_FILE}
     volumes:
       - ${HOST_DOWNLOAD_PATH:-./downloads}:/downloads
     networks:

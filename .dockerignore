@@ -24,7 +24,7 @@ env.example
 .env
 README.md
 LICENSE
-requirements.txt
+# Mantener requirements.txt para instalación en la imagen
 pyproject.toml
 setup.py
 scripts

@@ -13,56 +13,54 @@ from .watcher import YouTubeWatcher
 
 def setup_logging():
     """Configurar logging para la aplicación"""
-    level = os.getenv('LOG_LEVEL', 'INFO').upper()
+    level = os.getenv("LOG_LEVEL", "INFO").upper()
     logging.basicConfig(
         level=getattr(logging, level, logging.INFO),
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout)
-        ]
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
     )
 
 
 def get_environment_config():
     """
     Obtener configuración desde variables de entorno.
-    
+
     Returns:
         Tupla con (playlist_url, download_path, interval_ms, cookies_path)
     """
-    playlist_url = os.getenv('PLAYLIST_URL')
-    download_path = os.getenv('DOWNLOAD_PATH', './downloads')
-    interval_ms = int(os.getenv('OBSERVER_INTERVAL_MS', '60000'))
-    cookies_path = os.getenv('COOKIES_FILE')
-    
+    playlist_url = os.getenv("PLAYLIST_URL")
+    download_path = os.getenv("DOWNLOAD_PATH", "./downloads")
+    interval_ms = int(os.getenv("OBSERVER_INTERVAL_MS", "60000"))
+    cookies_path = os.getenv("COOKIES_FILE")
+
     return playlist_url, download_path, interval_ms, cookies_path
 
 
 def validate_config(playlist_url: str, download_path: str) -> bool:
     """
     Validar configuración.
-    
+
     Args:
         playlist_url: URL de la playlist
         download_path: Directorio de descargas
-        
+
     Returns:
         True si la configuración es válida
     """
     if not playlist_url:
         logging.error("PLAYLIST_URL no está configurado")
         return False
-    
+
     valid_prefixes = (
-        'https://www.youtube.com/',
-        'https://music.youtube.com/',
-        'https://youtu.be/',
-        'https://www.youtube-nocookie.com/'
+        "https://www.youtube.com/",
+        "https://music.youtube.com/",
+        "https://youtu.be/",
+        "https://www.youtube-nocookie.com/",
     )
     if not playlist_url.startswith(valid_prefixes):
         logging.error("PLAYLIST_URL debe ser una URL válida de YouTube o YouTube Music")
         return False
-    
+
     # Crear directorio de descargas si no existe
     path = Path(download_path)
     path.mkdir(parents=True, exist_ok=True)
@@ -75,7 +73,7 @@ def validate_config(playlist_url: str, download_path: str) -> bool:
     except Exception:
         logging.error(f"No hay permisos de escritura en: {path}")
         return False
-    
+
     return True
 
 
@@ -87,33 +85,31 @@ def main():
     parser.add_argument(
         "--latest-only",
         action="store_true",
-        help="Descargar únicamente la última canción de la playlist"
+        help="Descargar únicamente la última canción de la playlist",
     )
     parser.add_argument(
-        "--playlist-url",
-        help="URL de la playlist (sobrescribe PLAYLIST_URL)"
+        "--playlist-url", help="URL de la playlist (sobrescribe PLAYLIST_URL)"
     )
     parser.add_argument(
-        "--download-path",
-        help="Directorio de descargas (sobrescribe DOWNLOAD_PATH)"
+        "--download-path", help="Directorio de descargas (sobrescribe DOWNLOAD_PATH)"
     )
     parser.add_argument(
         "--cookies",
-        help="Ruta a archivo de cookies de YouTube para playlists privadas/edad/región"
+        help="Ruta a archivo de cookies de YouTube para playlists privadas/edad/región",
     )
-    
+
     args = parser.parse_args()
-    
+
     print("YouTube Playlist Watcher - Descarga automática a FLAC")
     print("Asegúrate de tener yt-dlp, ffmpeg, mutagen y Pillow instalados")
     print()
-    
+
     # Configurar logging
     setup_logging()
-    
+
     # Obtener configuración
     playlist_url, download_path, interval_ms, cookies_path = get_environment_config()
-    
+
     # Sobrescribir con argumentos de línea de comandos si se proporcionan
     if args.playlist_url:
         playlist_url = args.playlist_url
@@ -121,15 +117,17 @@ def main():
         download_path = args.download_path
     if args.cookies:
         cookies_path = args.cookies
-    
+
     # Validar configuración
     if not validate_config(playlist_url, download_path):
         sys.exit(1)
-    
+
     try:
         # Crear watcher
-        watcher = YouTubeWatcher(playlist_url, download_path, interval_ms, cookies_path=cookies_path)
-        
+        watcher = YouTubeWatcher(
+            playlist_url, download_path, interval_ms, cookies_path=cookies_path
+        )
+
         if args.latest_only:
             # Descargar solo la última canción
             print("🎵 Modo: Descarga única de la última canción")
@@ -143,7 +141,7 @@ def main():
             # Modo normal de monitoreo continuo
             print("🔄 Modo: Monitoreo continuo de la playlist")
             watcher.start()
-            
+
     except KeyboardInterrupt:
         logging.info("Aplicación detenida por el usuario")
     except Exception as e:

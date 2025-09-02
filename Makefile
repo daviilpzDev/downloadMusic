@@ -14,7 +14,7 @@ install:
 	. venv/bin/activate; $(PIP) install -r requirements.txt
 
 dev:
-	. venv/bin/activate; $(PIP) install -r requirements.txt; $(PIP) install -e .[dev]
+	. venv/bin/activate; $(PIP) install -r requirements.txt; $(PIP) install -e '.[dev]'
 
 fmt:
 	. venv/bin/activate; black src tests scripts --line-length 88
@@ -46,4 +46,3 @@ docker-down:
 pre-commit:
 	. venv/bin/activate; pre-commit install
 	. venv/bin/activate; pre-commit run --all-files || true
-

@@ -17,6 +17,20 @@ Unreleased
 - Changed:
 - Fixed:
 
+3.0.4 - 2025-09-02
+- Added: Publicación de imagen en GitHub Container Registry (GHCR) en el workflow de Release.
+- Changed: CI con matriz de Python 3.11 y 3.12 y checkout con `fetch-depth: 0`.
+- Changed: Dockerfile simplificado (sin runner antiguo) y ejecución como usuario mapeado por docker-compose.
+- Changed: Makefile/CI instalan extras con comillas para evitar problemas de zsh (`'.[dev]'`).
+- Fixed: `pyproject.toml` `tag_regex` corregido (escape de `\` en TOML) para `setuptools_scm`.
+- Fixed: Workflow de Release — corrección de condiciones con secrets (mapeo a env) y validación tag/paquete.
+- Fixed: Lint y estilo (líneas largas, imports no usados) y `get_stats()` devuelve la ruta cruda esperada por tests.
+- Added: Variable `YT_DLP_VERSION` en build de compose y `COOKIES_FILE` expuesta en env.
+- Changed: Listado de playlist con `yt-dlp -J --flat-playlist` y `check=False` para tolerar elementos problemáticos.
+- Changed: Forzado `--cache-dir /tmp/yt-dlp-cache` y `--ignore-errors` en yt-dlp (listado y descarga).
+- Fixed: `.dockerignore` permite `requirements.txt` para el build.
+- Fixed: El watcher solo marca como descargado si se genera el FLAC (downloader retorna bool y se comprueba).
+
 3.0.3 - 2025-09-02
 - Changed: release.yml Fue modificado para configuraciones de github actions
 - Fixed: Control de .env en referencia a docker hub

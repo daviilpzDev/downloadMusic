@@ -19,7 +19,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código Python
-COPY youtube_watcher.py .
 COPY src ./src
 
 # Asegurar que los módulos del paquete estén en el PYTHONPATH
@@ -28,9 +27,7 @@ ENV PYTHONPATH="/app/src"
 # Crear directorio de descargas
 RUN mkdir -p /downloads
 
-# Crear usuario no root
-RUN useradd -m appuser && chown -R appuser:appuser /downloads /app
-USER appuser
+# Ejecutará con un usuario mapeado desde docker-compose (UID/GID)
 
 # Variables de entorno por defecto
 ENV PLAYLIST_URL=""

@@ -25,7 +25,9 @@ def main():
             "https://music.youtube.com/playlist?list=PLFgquLnL59anUbTCum31nHshzm-3pAMP-",
         )
     )
-    download_path = sys.argv[2] if len(sys.argv) > 2 else os.getenv("DOWNLOAD_PATH", "./downloads")
+    download_path = (
+        sys.argv[2] if len(sys.argv) > 2 else os.getenv("DOWNLOAD_PATH", "./downloads")
+    )
 
     print("🎵 Probando descarga de última canción...")
     print(f"Playlist: {playlist_url}")

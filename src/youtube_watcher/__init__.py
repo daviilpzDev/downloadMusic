@@ -9,7 +9,7 @@ try:
     from importlib.metadata import version, PackageNotFoundError
 
     __version__ = version("youtube-playlist-watcher")
-except Exception:
+except PackageNotFoundError:
     # En entorno de desarrollo sin instalar el paquete
     __version__ = "0+unknown"
 __author__ = "David Lopez"

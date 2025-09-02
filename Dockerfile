@@ -41,4 +41,4 @@ ENV OBSERVER_INTERVAL_MS="60000"
 VOLUME ["/downloads"]
 
 # Comando por defecto
-CMD ["python", "youtube_watcher.py"]
+CMD ["python", "-m", "youtube_watcher"]

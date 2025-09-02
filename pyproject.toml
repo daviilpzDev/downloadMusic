@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "youtube-playlist-watcher"
-version = "1.0.0"
+version = "3.0.1"
 description = "YouTube Playlist Watcher - Descarga automática a FLAC"
 readme = "README.md"
 license = {text = "MIT"}
@@ -37,15 +37,16 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0",
+    "pre-commit>=3.7.0",
 ]
 
 [project.scripts]
 youtube-watcher = "youtube_watcher.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/downloadMusic"
-Repository = "https://github.com/yourusername/downloadMusic"
-Issues = "https://github.com/yourusername/downloadMusic/issues"
+Homepage = "https://github.com/daviilpzDev/downloadMusic"
+Repository = "https://github.com/daviilpzDev/downloadMusic"
+Issues = "https://github.com/daviilpzDev/downloadMusic/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -59,6 +60,10 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

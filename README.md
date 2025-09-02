@@ -45,7 +45,7 @@ Este proyecto observa una playlist de YouTube y descarga automáticamente nuevas
 
 1. Clona el repositorio:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/daviilpzDev/downloadMusic.git
    cd downloadMusic
    ```
 
@@ -68,7 +68,7 @@ Este proyecto observa una playlist de YouTube y descarga automáticamente nuevas
 
 1. Clona el repositorio:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/daviilpzDev/downloadMusic.git
    cd downloadMusic
    ```
 
@@ -86,7 +86,11 @@ Este proyecto observa una playlist de YouTube y descarga automáticamente nuevas
 
 4. Ejecuta el watcher:
    ```bash
-   python youtube_watcher.py
+   # Como módulo (recomendado)
+   python -m youtube_watcher
+
+   # O con el script instalado (si lo instalaste como paquete)
+   youtube-watcher
    ```
 
 ## 🐳 Instalación con Docker
@@ -135,8 +139,10 @@ Este proyecto observa una playlist de YouTube y descarga automáticamente nuevas
 ### Variables de Entorno
 
 - `PLAYLIST_URL` (requerido): URL de la playlist de YouTube a observar
-- `DOWNLOAD_PATH` (opcional): Ruta donde guardar archivos FLAC (default: `./downloads`)
+- `DOWNLOAD_PATH` (opcional): Ruta donde guardar archivos FLAC. En Docker: siempre `/downloads`
 - `OBSERVER_INTERVAL_MS` (opcional): Intervalo de verificación en milisegundos (default: `60000`)
+- `LOG_LEVEL` (opcional): Nivel de logs (`INFO` por defecto)
+- `COOKIES_FILE` (opcional): Ruta a cookies para playlists privadas/restricciones
 
 ### Archivo de Configuración
 
@@ -197,6 +203,20 @@ sudo apt install yt-dlp ffmpeg
 # Windows
 # Descargar desde https://github.com/yt-dlp/yt-dlp y https://ffmpeg.org/
 ```
+
+### Playlists Privadas / Restricciones
+
+Si tu playlist requiere autenticación o acceso regional:
+- Exporta `COOKIES_FILE` apuntando a un archivo de cookies compatible con `yt-dlp`.
+- En Docker, monta ese archivo dentro del contenedor (por ejemplo: `-v /ruta/host/cookies.txt:/app/cookies.txt` y `COOKIES_FILE=/app/cookies.txt`).
+
+## 📦 Despliegue con Docker Compose / Portainer
+
+- En `.env` del stack define al menos:
+  - `PLAYLIST_URL`
+  - `HOST_DOWNLOAD_PATH` (por ejemplo `/mnt/storage/media/music/`)
+  - `DOWNLOAD_PATH=/downloads`
+  - `UID` y `GID` para mapear el usuario del host (evita problemas de permisos)
 
 ### Dependencias Python
 

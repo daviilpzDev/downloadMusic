@@ -15,6 +15,11 @@ services:
     networks:
       - downloader-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "yt-dlp --version >/dev/null 2>&1 && ffmpeg -version >/dev/null 2>&1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
 networks:
   downloader-network:

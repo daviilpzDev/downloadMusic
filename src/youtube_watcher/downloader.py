@@ -17,7 +17,7 @@ class YouTubeDownloader:
     Clase para descargar y convertir videos de YouTube a FLAC
     """
     
-    def __init__(self, download_path: str):
+    def __init__(self, download_path: str, cookies_path: str | None = None):
         """
         Inicializar downloader.
         
@@ -26,6 +26,7 @@ class YouTubeDownloader:
         """
         self.download_path = Path(download_path)
         self.metadata_handler = MetadataHandler()
+        self.cookies_path = cookies_path
         
         # Crear directorio si no existe
         self.download_path.mkdir(parents=True, exist_ok=True)
@@ -52,6 +53,7 @@ class YouTubeDownloader:
         
         # Crear nombre de archivo
         filename = f"{safe_artist} - {safe_title}.flac"
+        filename = self._trim_filename(filename, max_len=200)
         output_path = self.download_path / filename
         
         # Evitar duplicados: si el archivo ya existe, no volver a descargar
@@ -98,8 +100,10 @@ class YouTubeDownloader:
             "--audio-format", "opus",
             "--audio-quality", "0",
             "-o", str(self.download_path / f"{base_filename}.%(ext)s"),
-            f"https://www.youtube.com/watch?v={video_data['id']}"
         ]
+        if self.cookies_path:
+            download_cmd += ["--cookies", self.cookies_path]
+        download_cmd += [f"https://www.youtube.com/watch?v={video_data['id']}"]
         
         try:
             logger.info(f"Descargando '{title}' en Opus...")
@@ -185,3 +189,19 @@ class YouTubeDownloader:
         filename = ' '.join(filename.split())
 
         return filename
+
+    def _trim_filename(self, filename: str, max_len: int = 200) -> str:
+        """
+        Truncar el nombre del archivo manteniendo la extensión si excede max_len.
+        """
+        try:
+            if len(filename) <= max_len:
+                return filename
+            stem, dot, ext = filename.rpartition('.')
+            if not dot:  # no extension
+                return filename[:max_len]
+            keep = max_len - len(ext) - 1  # account for dot
+            stem = stem[:keep]
+            return f"{stem}.{ext}"
+        except Exception:
+            return filename[:max_len]

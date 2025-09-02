@@ -78,7 +78,7 @@ case $choice in
         set -a
         source ./.env
         set +a
-        python3 youtube_watcher.py
+        python3 -m youtube_watcher
         ;;
     3)
         echo "🐳 Iniciando con Docker manual..."

@@ -20,7 +20,7 @@ class YouTubeWatcher:
     automáticamente nuevas canciones.
     """
     
-    def __init__(self, playlist_url: str, download_path: str, interval_ms: int = 60000):
+    def __init__(self, playlist_url: str, download_path: str, interval_ms: int = 60000, *, cookies_path: str | None = None):
         """
         Inicializar el watcher.
         
@@ -39,8 +39,8 @@ class YouTubeWatcher:
         self.download_path.mkdir(parents=True, exist_ok=True)
         
         # Inicializar componentes
-        self.monitor = PlaylistMonitor(playlist_url)
-        self.downloader = YouTubeDownloader(download_path)
+        self.monitor = PlaylistMonitor(playlist_url, cookies_path=cookies_path)
+        self.downloader = YouTubeDownloader(download_path, cookies_path=cookies_path)
         
         # Cargar estado previo de descargas
         self._load_state()

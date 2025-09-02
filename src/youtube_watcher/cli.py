@@ -13,8 +13,9 @@ from .watcher import YouTubeWatcher
 
 def setup_logging():
     """Configurar logging para la aplicación"""
+    level = os.getenv('LOG_LEVEL', 'INFO').upper()
     logging.basicConfig(
-        level=logging.INFO,
+        level=getattr(logging, level, logging.INFO),
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(sys.stdout)
@@ -27,13 +28,14 @@ def get_environment_config():
     Obtener configuración desde variables de entorno.
     
     Returns:
-        Tupla con (playlist_url, download_path, interval_ms)
+        Tupla con (playlist_url, download_path, interval_ms, cookies_path)
     """
     playlist_url = os.getenv('PLAYLIST_URL')
     download_path = os.getenv('DOWNLOAD_PATH', './downloads')
     interval_ms = int(os.getenv('OBSERVER_INTERVAL_MS', '60000'))
+    cookies_path = os.getenv('COOKIES_FILE')
     
-    return playlist_url, download_path, interval_ms
+    return playlist_url, download_path, interval_ms, cookies_path
 
 
 def validate_config(playlist_url: str, download_path: str) -> bool:
@@ -95,6 +97,10 @@ def main():
         "--download-path",
         help="Directorio de descargas (sobrescribe DOWNLOAD_PATH)"
     )
+    parser.add_argument(
+        "--cookies",
+        help="Ruta a archivo de cookies de YouTube para playlists privadas/edad/región"
+    )
     
     args = parser.parse_args()
     
@@ -106,13 +112,15 @@ def main():
     setup_logging()
     
     # Obtener configuración
-    playlist_url, download_path, interval_ms = get_environment_config()
+    playlist_url, download_path, interval_ms, cookies_path = get_environment_config()
     
     # Sobrescribir con argumentos de línea de comandos si se proporcionan
     if args.playlist_url:
         playlist_url = args.playlist_url
     if args.download_path:
         download_path = args.download_path
+    if args.cookies:
+        cookies_path = args.cookies
     
     # Validar configuración
     if not validate_config(playlist_url, download_path):
@@ -120,7 +128,7 @@ def main():
     
     try:
         # Crear watcher
-        watcher = YouTubeWatcher(playlist_url, download_path, interval_ms)
+        watcher = YouTubeWatcher(playlist_url, download_path, interval_ms, cookies_path=cookies_path)
         
         if args.latest_only:
             # Descargar solo la última canción

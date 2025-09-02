@@ -15,7 +15,7 @@ class PlaylistMonitor:
     Clase para monitorear y obtener información de playlists de YouTube
     """
     
-    def __init__(self, playlist_url: str):
+    def __init__(self, playlist_url: str, cookies_path: str | None = None):
         """
         Inicializar monitor de playlist.
         
@@ -23,6 +23,7 @@ class PlaylistMonitor:
             playlist_url: URL de la playlist de YouTube
         """
         self.playlist_url = playlist_url
+        self.cookies_path = cookies_path
     
     def get_playlist_videos(self) -> List[Dict]:
         """
@@ -33,7 +34,10 @@ class PlaylistMonitor:
         """
         try:
             # Obtener metadatos por-video de la playlist. yt-dlp imprime 1 JSON por video.
-            cmd = ["yt-dlp", "--print-json", "--no-simulate", "--skip-download", self.playlist_url]
+            cmd = ["yt-dlp", "--print-json", "--no-simulate", "--skip-download"]
+            if self.cookies_path:
+                cmd += ["--cookies", self.cookies_path]
+            cmd += [self.playlist_url]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             videos: List[Dict] = []
@@ -74,7 +78,10 @@ class PlaylistMonitor:
         """
         try:
             # Usar un único JSON con metadatos de la playlist
-            cmd = ["yt-dlp", "-J", self.playlist_url]  # equivalente a --dump-single-json
+            cmd = ["yt-dlp", "-J"]  # equivalente a --dump-single-json
+            if self.cookies_path:
+                cmd += ["--cookies", self.cookies_path]
+            cmd += [self.playlist_url]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             data = json.loads(result.stdout)

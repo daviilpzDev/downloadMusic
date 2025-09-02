@@ -1,0 +1,5 @@
+* text=auto eol=lf
+
+# Make linguist detect src/ as primary language
+src/* linguist-detectable=true
+

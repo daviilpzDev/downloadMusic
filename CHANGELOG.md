@@ -17,6 +17,10 @@ Unreleased
 - Changed:
 - Fixed:
 
+3.0.3 - 2025-09-02
+- Changed: release.yml Fue modificado para configuraciones de github actions
+- Fixed: Control de .env en referencia a docker hub
+
 3.0.2 - 2025-09-02
 - Added: Documentación de versionado y releases en README y este CHANGELOG.
 - Added: Workflow de GitHub Actions para releases (paquete + GitHub Release, Docker opcional).

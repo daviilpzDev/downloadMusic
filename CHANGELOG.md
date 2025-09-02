@@ -17,6 +17,15 @@ Unreleased
 - Changed:
 - Fixed:
 
+3.0.7 - 2025-09-02
+- Fixed: Cumplimiento flake8 E501 (línea larga) en `downloader.py` al envolver la URL de fallback de thumbnail; CI verde de nuevo.
+
+3.0.6 - 2025-09-02
+- Fixed: Portadas embebidas de forma robusta aunque `yt-dlp` no entregue `thumbnail` plano; ahora se resuelve desde `thumbnails` y, si falta, se usa fallback `i.ytimg.com/…/hqdefault.jpg`.
+- Fixed: Soporte de portadas servidas como WEBP convirtiéndolas a JPEG antes de incrustar (Mutagen/FLAC).
+- Added: Trazas DEBUG detalladas para diagnóstico de portadas (URL resuelta, respuesta HTTP, dimensiones/bytes procesados y `pictures` tras guardar).
+- Changed: Descarga de portada con User‑Agent para evitar bloqueos de CDN.
+
 3.0.5 - 2025-09-02
 - Fixed: `PlaylistMonitor.get_playlist_videos()` soporta stdout con JSON de video único (compat con tests y casos edge).
 - Fixed: CI fallos por parser — tolerancia de formatos de salida (`-J --flat-playlist`) y fallback por líneas.

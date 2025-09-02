@@ -33,7 +33,7 @@ class PlaylistMonitor:
             Lista de diccionarios con información de cada video
         """
         try:
-            # Usar salida única de la playlist en modo "flat" para minimizar errores
+            # Usar salida única de la playlist en modo "flat"; tolerar errores
             cmd = [
                 "yt-dlp",
                 "-J",
@@ -49,15 +49,33 @@ class PlaylistMonitor:
             result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
             videos: List[Dict] = []
-            if result.stdout:
+            stdout = (result.stdout or "").strip()
+            if stdout:
+                # Intentar parsear un único JSON (playlist o video)
                 try:
-                    data = json.loads(result.stdout)
-                    entries = data.get("entries", []) if isinstance(data, dict) else []
-                    for entry in entries:
-                        if entry and isinstance(entry, dict):
-                            videos.append(entry)
+                    data = json.loads(stdout)
+                    if isinstance(data, dict):
+                        entries = data.get("entries")
+                        if isinstance(entries, list) and entries:
+                            for entry in entries:
+                                if entry and isinstance(entry, dict):
+                                    videos.append(entry)
+                        else:
+                            # Fallback: salida de un solo video
+                            if data.get("id"):
+                                videos.append(data)
+                    # Si no es dict, caeremos al parseo por líneas
                 except json.JSONDecodeError:
-                    pass
+                    # Fallback: varias líneas JSON
+                    for line in stdout.splitlines():
+                        if not line.strip():
+                            continue
+                        try:
+                            item = json.loads(line)
+                            if item:
+                                videos.append(item)
+                        except json.JSONDecodeError:
+                            continue
 
             logger.info(f"Obtenidos {len(videos)} videos de la playlist")
             return videos

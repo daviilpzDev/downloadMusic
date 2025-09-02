@@ -1,39 +1,44 @@
-# Imagen base con Maven y JDK 11 para la compilación
-FROM maven:3.9.0-eclipse-temurin-11 AS build
+FROM python:3.11-slim
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar yt-dlp version fija para reproducibilidad
+ARG YT_DLP_VERSION=2024.08.06
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp -o /usr/local/bin/yt-dlp \
+    && chmod +x /usr/local/bin/yt-dlp
 
 # Crear directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de Maven y descargar dependencias
-COPY pom.xml .
-RUN mvn dependency:go-offline
+# Copiar requirements e instalar dependencias Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código fuente
+# Copiar código Python
+COPY youtube_watcher.py .
 COPY src ./src
 
-# Construir el proyecto sin ejecutar pruebas
-RUN mvn clean package -DskipTests
+# Asegurar que los módulos del paquete estén en el PYTHONPATH
+ENV PYTHONPATH="/app/src"
 
-# Imagen final para ejecutar las pruebas
-FROM maven:3.9.0-eclipse-temurin-11
+# Crear directorio de descargas
+RUN mkdir -p /downloads
 
-# Instalar yt-dlp y dependencias necesarias
-RUN apt-get update && apt-get install -y \
-    curl \
-    ffmpeg \
-    python3 \
-    python3-pip && \
-    pip3 install --upgrade yt-dlp && \
-    rm -rf /var/lib/apt/lists/*
+# Crear usuario no root
+RUN useradd -m appuser && chown -R appuser:appuser /downloads /app
+USER appuser
 
-# Establecer directorio de trabajo
-WORKDIR /app
+# Variables de entorno por defecto
+ENV PLAYLIST_URL=""
+ENV DOWNLOAD_PATH="/downloads"
+ENV OBSERVER_INTERVAL_MS="60000"
 
-# Copiar el código y la configuración
-COPY --from=build /app /app
-
-# Definir variable de entorno para descargas
-ENV DOWNLOAD_PATH=/target/
+# Volumen para descargas
+VOLUME ["/downloads"]
 
 # Comando por defecto
-CMD ["mvn", "test"]
+CMD ["python", "youtube_watcher.py"]
